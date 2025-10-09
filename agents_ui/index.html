@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>LiveKit UI Agent Tester</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --accent:#22d3ee; --ok:#22c55e; --err:#ef4444; }
+    * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    body { margin: 0; background: linear-gradient(145deg,#0b1023,#0f172a 40%,#0b1023); color: #e5e7eb; }
+    .wrap { max-width: 900px; margin: 40px auto; padding: 0 16px; }
+    .card { background: rgba(17,24,39,0.8); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    h1 { font-size: 22px; margin: 0 0 12px; letter-spacing: .5px; }
+    p.hint { margin-top: 0; color: var(--muted); font-size: 13px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    label { display: block; font-size: 12px; color: #a5b4fc; margin: 10px 0 6px; letter-spacing: .2px; }
+    input, textarea, select {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+      background: #0b1220; color: #e5e7eb; outline: none;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    button {
+      border: none; border-radius: 12px; padding: 10px 14px; cursor: pointer; color: #0b1220;
+      background: var(--accent); font-weight: 600; transition: transform .04s ease, filter .15s ease;
+    }
+    button.secondary { background: #7dd3fc; }
+    button.warn { background: #fca5a5; }
+    button:active { transform: translateY(1px); }
+    .status { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .log { margin-top: 16px; background: #0b1220; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; max-height: 260px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.45; }
+    .small { font-size: 12px; color: var(--muted); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(34,211,238,0.15); color: #67e8f9; font-size: 11px; margin-left: 8px;}
+    .sep { height: 1px; background: rgba(255,255,255,0.06); margin: 18px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>LiveKit UI Agent Tester <span class="pill">/send_text · /send_interrupt · /sessions</span></h1>
+      <p class="hint">Point this UI to your FastAPI (the one that holds your in-memory agent session registry). Make sure CORS is enabled on your API if you’re opening this file directly.</p>
+
+      <div class="grid">
+        <div>
+          <label>API Base URL</label>
+          <input id="apiBase" placeholder="http://localhost:8000" value="http://localhost:8000" />
+        </div>
+        <div>
+          <label>Auth Token (Bearer)</label>
+          <input id="apiToken" placeholder="super-secret" value="super-secret" />
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="grid">
+        <div>
+          <label>Room</label>
+          <input id="room" placeholder="my-room" />
+        </div>
+        <div>
+          <label>Agent ID</label>
+          <input id="agentId" placeholder="agent" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnList" class="secondary" title="GET /sessions">List Sessions</button>
+        <button id="btnPick" class="secondary" title="Pick from last fetched list">Pick Selected</button>
+        <select id="sessionsSelect" title="Sessions"></select>
+      </div>
+
+      <label style="margin-top:14px;">Text to Speak</label>
+      <textarea id="text" placeholder="Type something the agent should say…"></textarea>
+
+      <div class="row">
+        <button id="btnSpeak" title="POST /send_text">Speak</button>
+        <button id="btnInterrupt" class="warn" title="POST /send_interrupt">Interrupt</button>
+        <button id="btnClear" class="secondary">Clear Log</button>
+      </div>
+
+      <div id="status" class="status">Ready.</div>
+      <div id="log" class="log"></div>
+
+      <p class="small">Tip: If your API and agent run on different hosts/ports, enable CORS on FastAPI:
+        <code>from fastapi.middleware.cors import CORSMiddleware</code> and allow this file’s origin.</p>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const logEl = $("log"), statusEl = $("status");
+
+    function log(msg, kind="info") {
+      const time = new Date().toLocaleTimeString();
+      logEl.innerText += `[${time}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+      if (kind === "ok") { statusEl.className = "status ok"; statusEl.textContent = msg; }
+      else if (kind === "err") { statusEl.className = "status err"; statusEl.textContent = msg; }
+      else { statusEl.className = "status"; statusEl.textContent = msg; }
+    }
+
+    function baseHeaders() {
+      const token = $("apiToken").value.trim();
+      return {
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
+      };
+    }
+
+    function apiBase() {
+      return $("apiBase").value.replace(/\/+$/,"");
+    }
+
+    async function listSessions() {
+      try {
+        const res = await fetch(`${apiBase()}/sessions`, { headers: baseHeaders() });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const data = await res.json();
+        const sel = $("sessionsSelect");
+        sel.innerHTML = "";
+        (data || []).forEach(({room, agent_id}) => {
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify({room, agent_id});
+          opt.textContent = `${room} :: ${agent_id}`;
+          sel.appendChild(opt);
+        });
+        log(`Fetched ${data.length} session(s).`, "ok");
+      } catch (e) {
+        log(`/sessions failed: ${e.message}`, "err");
+      }
+    }
+
+    function pickSelected() {
+      const sel = $("sessionsSelect");
+      if (!sel.value) { log("No session selected.", "err"); return; }
+      try {
+        const {room, agent_id} = JSON.parse(sel.value);
+        $("room").value = room;
+        $("agentId").value = agent_id;
+        log(`Picked session ⇒ room="${room}", agent_id="${agent_id}"`, "ok");
+      } catch (e) {
+        log(`Pick failed: ${e.message}`, "err");
+      }
+    }
+
+    async function speak() {
+      const room = $("room").value.trim();
+      const agent_id = $("agentId").value.trim();
+      const text = $("text").value.trim();
+      if (!room || !agent_id || !text) { log("room, agent_id, and text are required.", "err"); return; }
+
+      try {
+        const res = await fetch(`${apiBase()}/send_text`, {
+          method: "POST",
+          headers: baseHeaders(),
+          body: JSON.stringify({ room, agent_id, text })
+        });
+        const body = await safeJSON(res);
+        if (!res.ok) throw new Error(body?.detail || res.statusText);
+        log(`Spoke: "${truncate(text, 100)}"`, "ok");
+      } catch (e) {
+        log(`/send_text failed: ${e.message}`, "err");
+      }
+    }
+
+    async function interrupt() {
+      const room = $("room").value.trim();
+      const agent_id = $("agentId").value.trim();
+      if (!room || !agent_id) { log("room and agent_id are required.", "err"); return; }
+
+      try {
+        const res = await fetch(`${apiBase()}/send_interrupt`, {
+          method: "POST",
+          headers: baseHeaders(),
+          body: JSON.stringify({ room, agent_id })
+        });
+        const body = await safeJSON(res);
+        if (!res.ok) throw new Error(body?.detail || res.statusText);
+        log(`Interrupt sent for ${room} :: ${agent_id}`, "ok");
+      } catch (e) {
+        log(`/send_interrupt failed: ${e.message}`, "err");
+      }
+    }
+
+    function truncate(s, n) { return s.length > n ? s.slice(0, n-1) + "…" : s; }
+    async function safeJSON(res) { try { return await res.json(); } catch { return null; } }
+
+    $("btnList").addEventListener("click", listSessions);
+    $("btnPick").addEventListener("click", pickSelected);
+    $("btnSpeak").addEventListener("click", speak);
+    $("btnInterrupt").addEventListener("click", interrupt);
+    $("btnClear").addEventListener("click", () => { logEl.innerText = ""; statusEl.textContent = "Ready."; statusEl.className = "status"; });
+
+    // Optional: auto-refresh sessions every 10s
+    let timer = setInterval(() => {
+      const baseOk = /^https?:\/\//.test(apiBase());
+      if (baseOk) listSessions();
+    }, 10000);
+  </script>
+</body>
+</html>
