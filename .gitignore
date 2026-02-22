@@ -206,5 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-*.json
+
 *.DS_Store
+
+#portfolio_agent
+portfolio_agent/.env.local

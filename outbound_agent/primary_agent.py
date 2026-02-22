@@ -18,10 +18,12 @@ from livekit.agents import (
     cli,
     WorkerOptions,
     RoomInputOptions,
+    RoomOutputOptions
 )
 from livekit.plugins import openai, deepgram, silero
 from livekit.plugins import elevenlabs
 from livekit.plugins import noise_cancellation
+from userdata import UserData
 
 # Import instructions
 from primary_agent_instructions import instructions as primary_instructions
@@ -42,7 +44,7 @@ class OutboundCaller(Agent):
         super().__init__(
             instructions=instructions,
             stt=deepgram.STT(),
-            llm=openai.LLM(),
+            llm=openai.LLM(model="openai/gpt-4.1"),
             tts=elevenlabs.TTS(
               voice_id="Xb7hH8MSUJpSbSDYk0k2",
               model="eleven_multilingual_v2",
@@ -56,7 +58,6 @@ class OutboundCaller(Agent):
 
     async def on_enter(self):
         await asyncio.sleep(5)
-        self.session.say("Hey sexy, how are you. Should I give you a boner.")
 
 
 
@@ -70,7 +71,7 @@ async def entrypoint(ctx: JobContext):
 
     agent = OutboundCaller(task=task)
 
-    session = AgentSession()
+    session = AgentSession(userdata=UserData(ctx=ctx))  
 
     session_started = asyncio.create_task(
         session.start(

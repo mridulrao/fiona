@@ -1,0 +1,60 @@
+<!doctype html>  
+<html>  
+<head>  
+  <script type="module">  
+    import { Room, RoomEvent, Track } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';  
+  
+    let room = new Room();  
+  
+    async function start() {  
+      const { token, serverUrl, roomName } = await fetch('http://localhost:3001/token', {  
+        method: 'POST',  
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify({ identity: 'user_' + Math.random().toString(36).substring(2, 6) })  
+      }).then(r => r.json());  
+  
+      await room.connect(serverUrl, token);  
+      await room.localParticipant.setMicrophoneEnabled(true);  
+      document.getElementById('status').textContent = `Connected to room: ${roomName}`;  
+      updateMuteButton();  
+  
+      room.on(RoomEvent.TrackSubscribed, (track) => {  
+        if (track.kind === Track.Kind.Audio) {  
+          const el = track.attach();  
+          document.body.appendChild(el);  
+        }  
+      });  
+    }  
+  
+    function disconnect() {  
+      room.disconnect();  
+      document.getElementById('status').textContent = 'Disconnected';  
+      updateMuteButton();  
+    }  
+  
+    function toggleMicrophone() {  
+      room.localParticipant.setMicrophoneEnabled(!room.localParticipant.isMicrophoneEnabled);  
+      updateMuteButton();  
+    }  
+  
+    function updateMuteButton() {  
+      const micBtn = document.getElementById('micBtn');  
+      if (room.localParticipant.isMicrophoneEnabled) {  
+        micBtn.textContent = 'Mute';  
+      } else {  
+        micBtn.textContent = 'Unmute';  
+      }  
+    }  
+  
+    document.getElementById('start').onclick = start;  
+    document.getElementById('disconnectBtn').onclick = disconnect;  
+    document.getElementById('micBtn').onclick = toggleMicrophone;  
+  </script>  
+</head>  
+<body>  
+  <button id="start">Start Call</button>  
+  <button id="disconnectBtn">Disconnect</button>  
+  <button id="micBtn">Mute</button>  
+  <p id="status">Click to connect</p>  
+</body>  
+</html>

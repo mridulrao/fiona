@@ -17,7 +17,7 @@ from primary_agent_instructions import instructions
 from base_agent import BaseAgentEnglish, BaseAgentHindi
 from livekit.plugins import elevenlabs
 from livekit.plugins import noise_cancellation
-
+from livekit.agents.voice.room_io import RoomInputOptions, RoomOutputOptions
 
   
 load_dotenv()  
