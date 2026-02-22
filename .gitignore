@@ -211,3 +211,9 @@ __marimo__/
 
 #portfolio_agent
 portfolio_agent/.env.local
+portfolio_agent/dist/
+portfolio_agent/node_modules/
+portfolio_agent/pnpm-lock.yaml
+
+# google creds
+inbound_agent/google_creds.json

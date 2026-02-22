@@ -1,60 +1,623 @@
-<!doctype html>  
-<html>  
-<head>  
-  <script type="module">  
-    import { Room, RoomEvent, Track } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';  
-  
-    let room = new Room();  
-  
-    async function start() {  
-      const { token, serverUrl, roomName } = await fetch('http://localhost:3001/token', {  
-        method: 'POST',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify({ identity: 'user_' + Math.random().toString(36).substring(2, 6) })  
-      }).then(r => r.json());  
-  
-      await room.connect(serverUrl, token);  
-      await room.localParticipant.setMicrophoneEnabled(true);  
-      document.getElementById('status').textContent = `Connected to room: ${roomName}`;  
-      updateMuteButton();  
-  
-      room.on(RoomEvent.TrackSubscribed, (track) => {  
-        if (track.kind === Track.Kind.Audio) {  
-          const el = track.attach();  
-          document.body.appendChild(el);  
-        }  
-      });  
-    }  
-  
-    function disconnect() {  
-      room.disconnect();  
-      document.getElementById('status').textContent = 'Disconnected';  
-      updateMuteButton();  
-    }  
-  
-    function toggleMicrophone() {  
-      room.localParticipant.setMicrophoneEnabled(!room.localParticipant.isMicrophoneEnabled);  
-      updateMuteButton();  
-    }  
-  
-    function updateMuteButton() {  
-      const micBtn = document.getElementById('micBtn');  
-      if (room.localParticipant.isMicrophoneEnabled) {  
-        micBtn.textContent = 'Mute';  
-      } else {  
-        micBtn.textContent = 'Unmute';  
-      }  
-    }  
-  
-    document.getElementById('start').onclick = start;  
-    document.getElementById('disconnectBtn').onclick = disconnect;  
-    document.getElementById('micBtn').onclick = toggleMicrophone;  
-  </script>  
-</head>  
-<body>  
-  <button id="start">Start Call</button>  
-  <button id="disconnectBtn">Disconnect</button>  
-  <button id="micBtn">Mute</button>  
-  <p id="status">Click to connect</p>  
-</body>  
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Yuki | Mridul Rao's Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #020408;
+      --cyan: #00ffe7;
+      --cyan-dim: #00ffe730;
+      --cyan-glow: #00ffe760;
+      --magenta: #ff006e;
+      --amber: #ffb700;
+      --text: #a8d8d8;
+      --text-dim: #3a6060;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      padding: 16px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,0.012) 2px,rgba(0,255,231,0.012) 4px);
+      pointer-events: none; z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: -50%; width: 200%; height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 99; opacity: 0.35;
+      animation: grain 0.4s steps(1) infinite;
+    }
+
+    @keyframes grain {
+      0%,100%{transform:translate(0,0)} 10%{transform:translate(-2%,-3%)}
+      20%{transform:translate(3%,1%)} 30%{transform:translate(-1%,4%)}
+      40%{transform:translate(2%,-2%)} 50%{transform:translate(-3%,3%)}
+      60%{transform:translate(1%,-4%)} 70%{transform:translate(-2%,2%)}
+      80%{transform:translate(4%,-1%)} 90%{transform:translate(-1%,-2%)}
+    }
+
+    canvas#bg-canvas { position:fixed;inset:0;z-index:0;opacity:0.5; }
+
+    .corner {
+      position: fixed;
+      width: clamp(36px,8vw,66px);
+      height: clamp(36px,8vw,66px);
+      z-index: 10;
+    }
+    .corner.tl{top:14px;left:14px;border-top:1px solid var(--cyan-glow);border-left:1px solid var(--cyan-glow);}
+    .corner.tr{top:14px;right:14px;border-top:1px solid var(--cyan-glow);border-right:1px solid var(--cyan-glow);}
+    .corner.bl{bottom:14px;left:14px;border-bottom:1px solid var(--cyan-glow);border-left:1px solid var(--cyan-glow);}
+    .corner.br{bottom:14px;right:14px;border-bottom:1px solid var(--cyan-glow);border-right:1px solid var(--cyan-glow);}
+
+    .ui-wrapper {
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center;
+      gap: clamp(18px,3.5vh,38px);
+      width: 100%; max-width: 420px;
+    }
+
+    .header { text-align: center; }
+    .header-title {
+      font-family: 'Orbitron', sans-serif; font-weight: 900;
+      font-size: clamp(1.5rem,6vw,2.8rem);
+      color: var(--cyan);
+      text-shadow: 0 0 20px var(--cyan), 0 0 50px var(--cyan-glow);
+      letter-spacing: 0.45em;
+    }
+    .header-sub {
+      font-size: clamp(0.48rem,1.5vw,0.62rem);
+      color: var(--text-dim); letter-spacing: 0.4em; margin-top: 6px;
+    }
+
+    .orb-container {
+      position: relative;
+      width: clamp(190px,58vw,280px);
+      height: clamp(190px,58vw,280px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    canvas#orb-canvas {
+      position: absolute; inset: 0;
+      width: 100% !important; height: 100% !important;
+    }
+    .orb-center-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(0.42rem,1.5vw,0.58rem);
+      letter-spacing: 0.3em; color: var(--cyan);
+      text-align: center; position: relative; z-index: 2;
+      text-shadow: 0 0 10px var(--cyan);
+      transition: color 0.4s ease; pointer-events: none;
+    }
+
+    .status-panel {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px; min-height: 54px;
+    }
+    .status-indicator {
+      display: flex; align-items: center; gap: 10px;
+      font-size: clamp(0.52rem,1.8vw,0.68rem);
+      letter-spacing: 0.25em; color: var(--text-dim);
+      transition: color 0.4s ease;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text-dim); flex-shrink: 0;
+      transition: all 0.4s ease;
+    }
+
+    .status-indicator.active   { color: var(--cyan); }
+    .status-indicator.speaking { color: var(--magenta); }
+    .status-indicator.muted    { color: var(--amber); }
+
+    .status-indicator.active .status-dot {
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan),0 0 16px var(--cyan);
+      animation: pulse-dot 1.2s ease-in-out infinite;
+    }
+    .status-indicator.speaking .status-dot {
+      background: var(--magenta);
+      box-shadow: 0 0 8px var(--magenta),0 0 16px var(--magenta);
+    }
+    .status-indicator.muted .status-dot {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber),0 0 16px var(--amber);
+    }
+    @keyframes pulse-dot {
+      0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)}
+    }
+
+    #status-text {
+      font-size: clamp(0.48rem,1.4vw,0.62rem);
+      color: var(--text-dim); letter-spacing: 0.2em;
+      text-align: center; transition: all 0.4s ease;
+    }
+    .data-ticker {
+      font-size: clamp(0.38rem,1.1vw,0.52rem);
+      color: var(--text-dim); letter-spacing: 0.12em;
+      opacity: 0; transition: opacity 0.5s; text-align: center;
+    }
+    .data-ticker.visible { opacity: 1; }
+
+    .freq-bars {
+      display: flex; align-items: center; gap: 3px;
+      height: 34px; opacity: 0; transition: opacity 0.4s ease;
+    }
+    .freq-bars.visible { opacity: 1; }
+    .freq-bar {
+      width: 3px; background: var(--cyan);
+      border-radius: 2px; box-shadow: 0 0 5px var(--cyan);
+      height: 4px; animation: freq-dance 0.6s ease-in-out infinite;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .freq-bar.muted-bar {
+      background: var(--amber) !important;
+      box-shadow: 0 0 5px var(--amber) !important;
+      animation: none !important;
+      height: 2px !important;
+      opacity: 0.35;
+    }
+    @keyframes freq-dance {
+      0%,100%{height:4px} 50%{height:var(--h,20px)}
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex; gap: 12px;
+      align-items: center; justify-content: center;
+      flex-wrap: wrap; width: 100%;
+    }
+
+    .btn {
+      font-family: 'Orbitron', sans-serif; font-weight: 700;
+      font-size: clamp(0.48rem,1.5vw,0.58rem);
+      letter-spacing: 0.22em;
+      padding: clamp(11px,2.5vw,14px) clamp(16px,5vw,26px);
+      border: 1px solid var(--text-dim);
+      background: transparent; color: var(--text-dim);
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: all 0.3s ease;
+      clip-path: polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-width: 90px; min-height: 44px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--cyan-dim);
+      transform: translateX(-100%); transition: transform 0.3s ease;
+    }
+    .btn:hover::before, .btn:active::before { transform: translateX(0); }
+    .btn:hover, .btn:active { color: var(--cyan); border-color: var(--cyan); }
+
+    .btn-primary { border-color:var(--cyan); color:var(--cyan); text-shadow:0 0 8px var(--cyan-glow); }
+    .btn-primary::before { background: var(--cyan-dim); }
+
+    .btn-danger { border-color:var(--magenta); color:var(--magenta); }
+    .btn-danger::before { background:rgba(255,0,110,0.15); }
+    .btn-danger:hover, .btn-danger:active { color:var(--magenta); border-color:var(--magenta); }
+
+    .btn-mic { border-color:var(--amber); color:var(--amber); }
+    .btn-mic::before { background:rgba(255,183,0,0.1); }
+    .btn-mic:hover, .btn-mic:active { color:var(--amber); border-color:var(--amber); }
+
+    .btn.hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="ui-wrapper">
+    <div class="header">
+      <div class="header-title">YUKI</div>
+      <div class="header-sub">Mridul Rao (Voice Interface)</div>
+    </div>
+
+    <div class="orb-container">
+      <canvas id="orb-canvas" width="280" height="280"></canvas>
+      <div class="orb-center-label" id="orb-label">STANDBY</div>
+    </div>
+
+    <div class="freq-bars" id="freq-bars"></div>
+
+    <div class="status-panel">
+      <div class="status-indicator" id="status-indicator">
+        <div class="status-dot"></div>
+        <span id="status-mode">OFFLINE</span>
+      </div>
+      <div id="status-text">AWAITING INITIALIZATION</div>
+      <div class="data-ticker" id="data-ticker">— — —</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="start">⬡ CONNECT</button>
+      <button class="btn btn-mic hidden" id="micBtn">🔇 MUTE</button>
+      <button class="btn btn-danger hidden" id="disconnectBtn">✕ TERMINATE</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Room, RoomEvent, Track } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';
+
+    let room = new Room();
+    let appState = 'idle';
+
+    // ── Background ──────────────────────────────────────────────
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeBg() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+    resizeBg();
+    window.addEventListener('resize', () => { resizeBg(); resizeOrb(); });
+
+    for (let i = 0; i < 70; i++) particles.push({
+      x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+      vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+      size: Math.random()*1.5+0.3, alpha: Math.random()*0.3+0.08
+    });
+
+    function drawBg() {
+      bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+      particles.forEach(p => {
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=bgCanvas.width; if(p.x>bgCanvas.width)p.x=0;
+        if(p.y<0)p.y=bgCanvas.height; if(p.y>bgCanvas.height)p.y=0;
+        bgCtx.beginPath(); bgCtx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        bgCtx.fillStyle=`rgba(0,255,231,${p.alpha})`; bgCtx.fill();
+      });
+      for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<90){
+          bgCtx.beginPath();
+          bgCtx.moveTo(particles[i].x,particles[i].y);
+          bgCtx.lineTo(particles[j].x,particles[j].y);
+          bgCtx.strokeStyle=`rgba(0,255,231,${0.05*(1-d/90)})`;
+          bgCtx.lineWidth=0.5; bgCtx.stroke();
+        }
+      }
+    }
+
+    // ── Orb ─────────────────────────────────────────────────────
+    const orbCanvas = document.getElementById('orb-canvas');
+    const ctx = orbCanvas.getContext('2d');
+    let W, H, CX, CY, R;
+
+    function resizeOrb() {
+      const s = orbCanvas.parentElement.offsetWidth;
+      orbCanvas.width = s; orbCanvas.height = s;
+      W = H = s; CX = CY = s/2; R = s*0.36;
+    }
+    resizeOrb();
+
+    function drawOrb(t) {
+      ctx.clearRect(0,0,W,H);
+      if      (appState==='listening') drawListening(t);
+      else if (appState==='speaking')  drawSpeaking(t);
+      else if (appState==='muted')     drawMuted(t);
+      else                             drawIdle(t);
+    }
+
+    function drawIdle(t) {
+      const ts=t*0.0005;
+      ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2);
+      ctx.strokeStyle='rgba(0,255,231,0.12)'; ctx.lineWidth=1; ctx.stroke();
+
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(ts);
+      ctx.beginPath(); ctx.arc(0,0,R*0.88,0,Math.PI*2);
+      ctx.setLineDash([4,12]); ctx.strokeStyle='rgba(0,255,231,0.28)';
+      ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+
+      const g=ctx.createRadialGradient(CX,CY,0,CX,CY,R*0.38);
+      g.addColorStop(0,'rgba(0,255,231,0.07)'); g.addColorStop(1,'transparent');
+      ctx.beginPath(); ctx.arc(CX,CY,R*0.38,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+
+      for(let i=0;i<24;i++){
+        const a=(i/24)*Math.PI*2+ts, len=i%6===0?R*0.1:R*0.05;
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+        ctx.lineTo(CX+Math.cos(a)*(R-len),CY+Math.sin(a)*(R-len));
+        ctx.strokeStyle=i%6===0?'rgba(0,255,231,0.55)':'rgba(0,255,231,0.18)';
+        ctx.lineWidth=1; ctx.stroke();
+      }
+    }
+
+    function drawMuted(t) {
+      const ts=t*0.0003;
+      // Dim amber ring
+      ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,183,0,0.14)'; ctx.lineWidth=1; ctx.stroke();
+
+      // Slow dashed counter-ring
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(-ts*0.5);
+      ctx.beginPath(); ctx.arc(0,0,R*0.82,0,Math.PI*2);
+      ctx.setLineDash([3,16]); ctx.strokeStyle='rgba(255,183,0,0.22)';
+      ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+
+      // Static noise inside
+      for(let i=0;i<38;i++){
+        const seed=Math.floor(t*0.008);
+        const nx=CX+(Math.sin(i*137.5+seed)*0.5)*R*0.75;
+        const ny=CY+(Math.cos(i*97.3+seed)*0.5)*R*0.75;
+        const a=(Math.sin(i+t*0.003)*0.5+0.5)*0.3;
+        ctx.beginPath(); ctx.arc(nx,ny,1,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,183,0,${a})`; ctx.fill();
+      }
+
+      // X in center
+      const s=R*0.22;
+      ctx.save(); ctx.translate(CX,CY);
+      ctx.strokeStyle='#ffb700'; ctx.lineWidth=2.5;
+      ctx.shadowColor='#ffb700'; ctx.shadowBlur=14;
+      ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(s,s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(-s,s); ctx.stroke();
+      ctx.shadowBlur=0; ctx.restore();
+
+      // Broken waveform at perimeter
+      ctx.beginPath();
+      for(let i=0;i<=20;i++){
+        const a=(i/20)*Math.PI*2;
+        const j=(Math.sin(i*7+t*0.001)>0.5)?R*0.02:0;
+        const r=R*0.62+j;
+        const x=CX+Math.cos(a)*r, y=CY+Math.sin(a)*r;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.strokeStyle='rgba(255,183,0,0.28)'; ctx.lineWidth=1; ctx.stroke();
+    }
+
+    function drawListening(t) {
+      const ts=t*0.002;
+      const grd=ctx.createRadialGradient(CX,CY,R*0.85,CX,CY,R*1.15);
+      grd.addColorStop(0,'rgba(0,255,231,0.1)'); grd.addColorStop(1,'transparent');
+      ctx.beginPath(); ctx.arc(CX,CY,R*1.15,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+
+      ctx.beginPath();
+      for(let i=0;i<=120;i++){
+        const a=(i/120)*Math.PI*2;
+        const n=Math.sin(a*3+ts)*R*0.12+Math.sin(a*7-ts*1.3)*R*0.06+Math.sin(a*13+ts*0.7)*R*0.03;
+        const r=(R*0.78)+n, x=CX+Math.cos(a)*r, y=CY+Math.sin(a)*r;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.strokeStyle='#00ffe7'; ctx.lineWidth=1.5;
+      ctx.shadowColor='#00ffe7'; ctx.shadowBlur=12; ctx.stroke(); ctx.shadowBlur=0;
+
+      const ig=ctx.createRadialGradient(CX,CY,0,CX,CY,R*0.78);
+      ig.addColorStop(0,'rgba(0,255,231,0.06)'); ig.addColorStop(1,'transparent');
+      ctx.fillStyle=ig; ctx.fill();
+
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(ts*2);
+      const sg=ctx.createLinearGradient(0,0,R*0.78,0);
+      sg.addColorStop(0,'rgba(0,255,231,0.6)'); sg.addColorStop(1,'rgba(0,255,231,0)');
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(R*0.78,0);
+      ctx.strokeStyle=sg; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
+    }
+
+    function drawSpeaking(t) {
+      const ts=t*0.001;
+      for(let layer=0;layer<3;layer++){
+        ctx.beginPath();
+        for(let i=0;i<=180;i++){
+          const a=(i/180)*Math.PI*2, ph=ts*(1+layer*0.3);
+          const n=Math.sin(a*(4+layer)+ph)*(R*0.18-layer*R*0.04)+
+                  Math.sin(a*(9+layer*2)-ph*1.7)*(R*0.08-layer*R*0.02)+
+                  Math.sin(a*17+ph*2.1+layer)*R*0.04;
+          const r=(R*0.95)+n, x=CX+Math.cos(a)*r, y=CY+Math.sin(a)*r;
+          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.closePath();
+        const c=['#ff006e','#00ffe7','#ffb700'][layer];
+        ctx.strokeStyle=c; ctx.lineWidth=2-layer*0.5;
+        ctx.shadowColor=c; ctx.shadowBlur=15-layer*3; ctx.stroke(); ctx.shadowBlur=0;
+      }
+      ctx.save(); ctx.beginPath(); ctx.arc(CX,CY,R*0.72,0,Math.PI*2); ctx.clip();
+      const gs=R*0.16;
+      for(let gx=CX-R;gx<=CX+R;gx+=gs){
+        for(let gy=CY-R;gy<=CY+R;gy+=gs){
+          const dx=gx-CX,dy=gy-CY,d=Math.sqrt(dx*dx+dy*dy);
+          const w=Math.sin(d*0.1-ts*6)*0.5+0.5;
+          if(w>0.6){ctx.beginPath();ctx.arc(gx,gy,1.5,0,Math.PI*2);ctx.fillStyle=`rgba(255,0,110,${w*0.55})`;ctx.fill();}
+        }
+      }
+      ctx.restore();
+      const pulse=Math.sin(ts*8)*0.5+0.5;
+      const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,R*0.35+pulse*R*0.1);
+      cg.addColorStop(0,`rgba(255,0,110,${0.26+pulse*0.18})`);
+      cg.addColorStop(0.5,`rgba(255,183,0,${0.07+pulse*0.08})`);
+      cg.addColorStop(1,'transparent');
+      ctx.beginPath(); ctx.arc(CX,CY,R*0.4+pulse*R*0.1,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
+    }
+
+    function loop(t) { drawBg(t); drawOrb(t); requestAnimationFrame(loop); }
+    requestAnimationFrame(loop);
+
+    // ── Freq bars ────────────────────────────────────────────────
+    const freqBarsEl = document.getElementById('freq-bars');
+    for(let i=0;i<20;i++){
+      const b=document.createElement('div'); b.className='freq-bar';
+      b.style.setProperty('--h',(Math.random()*28+6)+'px');
+      b.style.animationDelay=(i*0.05)+'s';
+      b.style.animationDuration=(0.4+Math.random()*0.5)+'s';
+      freqBarsEl.appendChild(b);
+    }
+
+    // ── Ticker ───────────────────────────────────────────────────
+    const tickerEl = document.getElementById('data-ticker');
+    const tickers = ['SIGNAL STRENGTH: ████████░░ 82%','LATENCY: 24ms // CODEC: OPUS','CHANNEL: ENCRYPTED // AES-256','AUDIO: 48kHz // 16-BIT'];
+    let tickerIdx=0;
+    function rotateTicker(){ tickerEl.textContent=tickers[tickerIdx++%tickers.length]; }
+
+    // ── Refs ─────────────────────────────────────────────────────
+    const indicator  = document.getElementById('status-indicator');
+    const modeLabel  = document.getElementById('status-mode');
+    const statusText = document.getElementById('status-text');
+    const orbLabel   = document.getElementById('orb-label');
+    const startBtn   = document.getElementById('start');
+    const micBtn     = document.getElementById('micBtn');
+    const discBtn    = document.getElementById('disconnectBtn');
+
+    function showButtons(phase) {
+      if(phase==='pre'){
+        startBtn.classList.remove('hidden');
+        micBtn.classList.add('hidden');
+        discBtn.classList.add('hidden');
+      } else {
+        startBtn.classList.add('hidden');
+        micBtn.classList.remove('hidden');
+        discBtn.classList.remove('hidden');
+      }
+    }
+
+    function setState(state, msg) {
+      appState = state;
+      indicator.className = 'status-indicator';
+      freqBarsEl.classList.remove('visible');
+      tickerEl.classList.remove('visible');
+      freqBarsEl.querySelectorAll('.freq-bar').forEach(b => b.classList.remove('muted-bar'));
+
+      if(state==='listening'){
+        indicator.classList.add('active');
+        modeLabel.textContent='LISTENING'; orbLabel.textContent='RECEIVING';
+        orbLabel.style.color='var(--cyan)';
+        freqBarsEl.classList.add('visible');
+        freqBarsEl.querySelectorAll('.freq-bar').forEach(b=>b.style.setProperty('--h',(Math.random()*28+6)+'px'));
+      } else if(state==='speaking'){
+        indicator.classList.add('speaking');
+        modeLabel.textContent='TRANSMITTING'; orbLabel.textContent='PROCESSING';
+        orbLabel.style.color='var(--magenta)';
+        tickerEl.classList.add('visible'); rotateTicker();
+      } else if(state==='muted'){
+        indicator.classList.add('muted');
+        modeLabel.textContent='MIC DISABLED'; orbLabel.textContent='MUTED';
+        orbLabel.style.color='var(--amber)';
+        freqBarsEl.classList.add('visible');
+        freqBarsEl.querySelectorAll('.freq-bar').forEach(b=>b.classList.add('muted-bar'));
+      } else if(state==='connected'){
+        indicator.classList.add('active');
+        modeLabel.textContent='CONNECTED'; orbLabel.textContent='STANDBY';
+        orbLabel.style.color='var(--cyan)';
+      } else {
+        // idle
+        modeLabel.textContent='OFFLINE'; orbLabel.textContent='STANDBY';
+        orbLabel.style.color='var(--cyan)';
+      }
+      if(msg) statusText.textContent=msg;
+    }
+
+    function updateMicButton() {
+      const on = room.localParticipant.isMicrophoneEnabled;
+      micBtn.innerHTML = on ? '🔇 MUTE' : '🎙 UNMUTE';
+    }
+
+    // ── LiveKit ──────────────────────────────────────────────────
+    async function start() {
+      statusText.textContent='ESTABLISHING CONNECTION...';
+      startBtn.style.opacity='0.5'; startBtn.style.pointerEvents='none';
+      try {
+        const { token, serverUrl, roomName } = await fetch('http://localhost:3001/token',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({identity:'user_'+Math.random().toString(36).substring(2,6)})
+        }).then(r=>r.json());
+
+        await room.connect(serverUrl,token);
+        await room.localParticipant.setMicrophoneEnabled(true);
+        showButtons('post');
+        setState('connected',`ROOM: ${roomName}`);
+        updateMicButton();
+
+        room.on(RoomEvent.TrackSubscribed,(track)=>{
+          if(track.kind===Track.Kind.Audio){
+            const el=track.attach(); el.style.display='none'; document.body.appendChild(el);
+            try {
+              const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+              const src=audioCtx.createMediaStreamSource(el.srcObject||new MediaStream([track.mediaStreamTrack]));
+              const analyser=audioCtx.createAnalyser(); analyser.fftSize=256;
+              src.connect(analyser);
+              const data=new Uint8Array(analyser.frequencyBinCount);
+              let timer;
+              function check(){
+                analyser.getByteFrequencyData(data);
+                const avg=data.reduce((a,b)=>a+b,0)/data.length;
+                if(avg>5&&appState!=='muted'){
+                  clearTimeout(timer);
+                  if(appState!=='speaking') setState('speaking','AGENT TRANSMITTING...');
+                  timer=setTimeout(()=>{if(appState==='speaking')setState('listening','AWAITING INPUT...');},600);
+                }
+                requestAnimationFrame(check);
+              }
+              check();
+            } catch(e){}
+          }
+        });
+
+        room.on(RoomEvent.LocalTrackPublished,(pub)=>{
+          if(pub.kind===Track.Kind.Audio) setState('listening','MICROPHONE ACTIVE');
+        });
+      } catch(e){
+        statusText.textContent='CONNECTION FAILED: '+(e.message||e);
+        startBtn.style.opacity='1'; startBtn.style.pointerEvents='';
+      }
+    }
+
+    function disconnect(){
+      room.disconnect();
+      showButtons('pre');
+      setState('idle','SESSION TERMINATED');
+      startBtn.style.opacity='1'; startBtn.style.pointerEvents='';
+    }
+
+    function toggleMicrophone(){
+      const on=room.localParticipant.isMicrophoneEnabled;
+      room.localParticipant.setMicrophoneEnabled(!on);
+      updateMicButton();
+      if(!on) setState('listening','MICROPHONE ACTIVE');
+      else    setState('muted','INPUT SUSPENDED');
+    }
+
+    startBtn.onclick = start;
+    discBtn.onclick  = disconnect;
+    micBtn.onclick   = toggleMicrophone;
+
+    showButtons('pre');
+
+    setInterval(()=>{
+      if(appState==='speaking'){
+        rotateTicker();
+        freqBarsEl.querySelectorAll('.freq-bar').forEach(b=>b.style.setProperty('--h',(Math.random()*28+6)+'px'));
+      }
+    },1800);
+  </script>
+</body>
 </html>

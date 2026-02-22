@@ -3,10 +3,11 @@ import * as deepgram from '@livekit/agents-plugin-deepgram';
 import * as elevenlabs from '@livekit/agents-plugin-elevenlabs';  
 import * as openai from '@livekit/agents-plugin-openai';  
 import * as silero from '@livekit/agents-plugin-silero';  
+import { BackgroundVoiceCancellation } from '@livekit/noise-cancellation-node';  
 import dotenv from 'dotenv';  
 import { fileURLToPath } from 'node:url';  
 import { cli } from '@livekit/agents';  
-
+  
 import { INSTRUCTIONS } from './prompt.js';  
 import { demoTool } from './tools.js';  
   
@@ -23,7 +24,7 @@ if (missingVars.length > 0) {
   
 class Assistant extends voice.Agent {  
   constructor() {  
-    super({   
+    super({  
       instructions: INSTRUCTIONS,  
       // tools: { demoTool }  
     });  
@@ -48,26 +49,26 @@ export default defineAgent({
   
     try {  
       console.log('Initializing plugins...');  
-        
+          
       // Test each plugin initialization separately  
       console.log('Initializing Deepgram STT...');  
       const stt = new deepgram.STT();  
-        
+          
       console.log('Initializing OpenAI LLM...');  
       const llm = new openai.LLM({  
         baseURL: 'https://api.groq.com/openai/v1',  
         apiKey: process.env.GROQ_API_KEY,  
         model: 'llama-3.3-70b-versatile',  
       });  
-        
+          
       console.log('Initializing ElevenLabs TTS...');  
-      const tts = new elevenlabs.TTS({
-        voice: { 
-          id: "0ptCJp0xgdabdcpVtCB5" 
-        },
-        model: "eleven_flash_v2_5"
-      }); 
-  
+      const tts = new elevenlabs.TTS({  
+        voice: {   
+          id: "0ptCJp0xgdabdcpVtCB5"   
+        },  
+        model: "eleven_flash_v2_5"  
+      });  
+   
       console.log('Creating AgentSession...');  
       session = new voice.AgentSession({  
         vad: ctx.proc.userData.vad! as silero.VAD,  
@@ -75,24 +76,30 @@ export default defineAgent({
         llm,  
         tts,  
       });  
-  
+   
       console.log('Starting session...');  
       await session.start({  
         agent: new Assistant(),  
         room: ctx.room,  
+        inputOptions: {  
+          // LiveKit Cloud enhanced noise cancellation  
+          // - If self-hosting, omit this parameter  
+          // - For telephony applications, use `BackgroundVoiceCancellationTelephony` for best results  
+          noiseCancellation: BackgroundVoiceCancellation(),  
+        },  
       });  
       console.log('Agent session started');  
-  
+   
       console.log('Connecting to room...');  
       await ctx.connect();  
       console.log('Connected to LiveKit server');  
-  
+   
       console.log('Generating initial reply...');  
       await session.generateReply({  
         instructions: 'Greet the user and offer help.',  
       });  
       console.log('Initial reply sent');  
-  
+   
     } catch (error) {  
       console.error('Error in agent entry:', error);  
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');  
@@ -100,5 +107,5 @@ export default defineAgent({
     }  
   },  
 });  
-  
+   
 cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url) }));
