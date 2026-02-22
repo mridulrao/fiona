@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YUKI Widget Test Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #020408;
+      --cyan:      #00ffe7;
+      --cyan-dim:  #00ffe730;
+      --cyan-glow: #00ffe760;
+      --magenta:   #ff006e;
+      --amber:     #ffb700;
+      --violet:    #a78bfa;
+      --orange:    #fb923c;
+      --blue:      #4fa3e0;
+      --text:      #a8d8d8;
+      --text-dim:  #3a6060;
+      --panel-bg:  rgba(2, 10, 16, 0.95);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* CRT scanlines */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,0.012) 2px,rgba(0,255,231,0.012) 4px);
+      pointer-events: none; z-index: 100;
+    }
+
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.35; }
+
+    /* ── Header ── */
+    .header {
+      position: relative; z-index: 10;
+      text-align: center; margin-bottom: 36px;
+    }
+    .header-tag {
+      font-size: 0.5rem; letter-spacing: 0.5em; color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .header-title {
+      font-family: 'Orbitron', sans-serif; font-weight: 900;
+      font-size: clamp(1.2rem, 4vw, 1.8rem); letter-spacing: 0.4em;
+      color: var(--cyan);
+      text-shadow: 0 0 20px var(--cyan), 0 0 50px var(--cyan-glow);
+    }
+    .header-sub {
+      font-size: 0.5rem; letter-spacing: 0.3em;
+      color: var(--text-dim); margin-top: 6px;
+    }
+    .header-note {
+      margin-top: 14px; font-size: 0.44rem; letter-spacing: 0.18em;
+      color: var(--amber); opacity: 0.75;
+    }
+    .header-note span { color: var(--cyan); }
+
+    /* ── Grid layout ── */
+    .grid {
+      position: relative; z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      width: 100%; max-width: 980px;
+    }
+
+    /* ── Widget panel ── */
+    .panel {
+      border: 1px solid rgba(255,255,255,0.06);
+      background: var(--panel-bg);
+      padding: 18px 20px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .panel::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,0.008) 2px,rgba(0,255,231,0.008) 4px);
+      pointer-events: none;
+    }
+    .panel-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent, var(--cyan)), transparent 70%);
+    }
+    .panel:hover { border-color: var(--accent, var(--cyan-glow)); }
+
+    .panel-tag {
+      font-size: 0.38rem; letter-spacing: 0.42em;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+    .panel-title {
+      font-family: 'Orbitron', sans-serif; font-weight: 700;
+      font-size: 0.78rem; letter-spacing: 0.14em;
+      color: var(--accent, var(--cyan));
+      text-shadow: 0 0 10px var(--accent, var(--cyan-glow));
+      margin-bottom: 4px;
+    }
+    .panel-desc {
+      font-size: 0.44rem; letter-spacing: 0.1em;
+      color: var(--text-dim); line-height: 1.8; margin-bottom: 14px;
+    }
+
+    /* ── Field ── */
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 0.38rem; letter-spacing: 0.35em;
+      color: var(--text-dim); margin-bottom: 5px;
+    }
+    .field input, .field select {
+      width: 100%; background: rgba(0,255,231,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: var(--text); font-family: 'Share Tech Mono', monospace;
+      font-size: 0.52rem; letter-spacing: 0.1em;
+      padding: 8px 10px; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--accent, var(--cyan));
+      background: rgba(0,255,231,0.06);
+    }
+    .field input::placeholder { color: var(--text-dim); opacity: 0.7; }
+    .field select option { background: #030a10; }
+
+    /* ── Fire button ── */
+    .btn-fire {
+      font-family: 'Orbitron', sans-serif; font-weight: 700;
+      font-size: 0.52rem; letter-spacing: 0.28em;
+      padding: 11px 20px; width: 100%;
+      border: 1px solid var(--accent, var(--cyan));
+      background: transparent; color: var(--accent, var(--cyan));
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: all 0.25s;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-fire::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(0,255,231,0.1);
+      transform: translateX(-100%); transition: transform 0.25s;
+    }
+    .btn-fire:hover::before, .btn-fire:active::before { transform: translateX(0); }
+    .btn-fire:active { transform: scale(0.98); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      z-index: 500; font-size: 0.5rem; letter-spacing: 0.25em;
+      padding: 9px 20px; border: 1px solid var(--cyan);
+      background: rgba(0,255,231,0.08); color: var(--cyan);
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+      clip-path: polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+    }
+    #toast.show { opacity: 1; }
+
+    /* ── Log ── */
+    .log-panel {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 980px;
+      margin-top: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: var(--panel-bg);
+      padding: 14px 16px;
+    }
+    .log-panel .panel-bar { background: linear-gradient(90deg, var(--text-dim), transparent 70%); }
+    .log-header {
+      font-size: 0.4rem; letter-spacing: 0.4em;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+    #log-body {
+      font-size: 0.46rem; letter-spacing: 0.08em;
+      color: var(--text-dim); line-height: 2;
+      max-height: 120px; overflow-y: auto;
+    }
+    #log-body .entry { display: flex; gap: 10px; }
+    #log-body .ts   { color: var(--cyan); opacity: 0.5; flex-shrink: 0; }
+    #log-body .msg  { color: var(--text); }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div id="toast">▸ WIDGET DISPATCHED</div>
+
+  <div class="header">
+    <div class="header-tag">// DEBUG INTERFACE</div>
+    <div class="header-title">YUKI WIDGET TEST PANEL</div>
+    <div class="header-sub">BROADCAST TEST HARNESS // VERSION 1.0</div>
+    <div class="header-note">
+      Open <span>index.html</span> in another tab — widgets will appear there in real-time
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="log-panel" style="position:relative">
+    <div class="panel-bar"></div>
+    <div class="log-header">// DISPATCH LOG</div>
+    <div id="log-body"><div class="entry"><span class="ts">READY</span><span class="msg">Waiting for dispatches...</span></div></div>
+  </div>
+
+<script>
+/* ── Background particles ── */
+const bgC = document.getElementById('bg-canvas');
+const bgX = bgC.getContext('2d');
+let pts = [];
+const resize = () => { bgC.width = innerWidth; bgC.height = innerHeight; };
+resize(); addEventListener('resize', resize);
+for (let i = 0; i < 55; i++) pts.push({
+  x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+  vx:(Math.random()-.5)*.25, vy:(Math.random()-.5)*.25,
+  sz:Math.random()*1.3+.3, a:Math.random()*.2+.05
+});
+(function loop() {
+  bgX.clearRect(0,0,bgC.width,bgC.height);
+  pts.forEach(p => {
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=bgC.width; if(p.x>bgC.width)p.x=0;
+    if(p.y<0)p.y=bgC.height; if(p.y>bgC.height)p.y=0;
+    bgX.beginPath(); bgX.arc(p.x,p.y,p.sz,0,Math.PI*2);
+    bgX.fillStyle=`rgba(0,255,231,${p.a})`; bgX.fill();
+  });
+  requestAnimationFrame(loop);
+})();
+
+/* ── BroadcastChannel ── */
+const bc = new BroadcastChannel('YUKI_WIDGETS');
+
+const toastEl  = document.getElementById('toast');
+const logBody  = document.getElementById('log-body');
+let toastTimer;
+
+function fire(widget, payload = {}) {
+  const msg = { type: 'YUKI_WIDGET', widget, ts: Date.now(), ...payload };
+  bc.postMessage(msg);
+
+  /* toast */
+  clearTimeout(toastTimer);
+  toastEl.textContent = `▸ ${widget.toUpperCase()} DISPATCHED`;
+  toastEl.classList.add('show');
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+
+  /* log */
+  const now = new Date().toLocaleTimeString('en-US',{hour12:false});
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<span class="ts">${now}</span><span class="msg">${JSON.stringify(msg)}</span>`;
+  logBody.prepend(entry);
+}
+
+/* ── Widget definitions ── */
+const SKILLS = [
+  { group:'Languages',      items:['Python','TypeScript','Node.js','SQL'] },
+  { group:'AI / ML',        items:['PyTorch','Azure OpenAI','Whisper','pgvector','BM25'] },
+  { group:'Infrastructure', items:['Docker','FastAPI','PostgreSQL','Redis','Kubernetes'] },
+  { group:'Platforms',      items:['LiveKit','ServiceNow','Azure','GCP','Apigee'] },
+];
+
+const PROJECTS = [
+  { name:'LiveKit Voice Agent', desc:'Real-time AI voice assistant with STT/TTS pipeline, VAD, and Hindi support', tags:['LiveKit','Whisper','Azure Speech'], url:'https://github.com/mridulrao/livekit-voice-agent' },
+  { name:'RAG Knowledge Base',  desc:'pgvector-backed retrieval pipeline with circuit breaker & sync worker',         tags:['pgvector','FastAPI','Azure OpenAI'], url:'https://github.com/mridulrao/rag-knowledge-base' },
+  { name:'ServiceNow Integration', desc:'Async ticket management client with Apigee/SPARC auth and incident handling', tags:['ServiceNow','Python','REST'], url:'https://github.com/mridulrao/servicenow-client' },
+  { name:'Workflow Recorder',   desc:'Browser + desktop interaction recorder that generates executable automation workflows', tags:['Playwright','Electron','Vision LLM'], url:'https://github.com/mridulrao/workflow-recorder' },
+];
+
+const EXPERIENCE = [
+  { role:'AI Engineer', company:'Current Role', period:'2023 – Present',
+    bullets:['Voice agents with LiveKit + custom STT/TTS pipelines','RAG systems on pgvector with Azure OpenAI','ServiceNow automation via Apigee gateway'] },
+  { role:'Software Engineer', company:'Previous Role', period:'2021 – 2023',
+    bullets:['Multi-agent IT support orchestration','Docker / Kubernetes containerised deployments','Edge model inference on Android & iOS'] },
+];
+
+/* ── Panel definitions ── */
+const PANELS = [
+  {
+    id: 'about',
+    accent: '#00ffe7',
+    tag: '// WIDGET · ABOUT',
+    title: 'Identity Card',
+    desc: 'Shows photo, name, role, and bio. No parameters required.',
+    fields: [],
+    fire: () => fire('about'),
+    label: '▸ FIRE ABOUT CARD',
+  },
+  {
+    id: 'projects',
+    accent: '#00ffe7',
+    tag: '// WIDGET · PROJECTS',
+    title: 'Projects Card',
+    desc: 'Lists featured GitHub projects. Optionally highlight a specific topic.',
+    fields: [
+      { id:'proj-filter', label:'FILTER (optional)', type:'text', placeholder:'e.g. RAG, voice, ServiceNow' },
+    ],
+    fire: () => fire('projects', { projects: PROJECTS, filter: val('proj-filter') || null }),
+    label: '▸ FIRE PROJECTS CARD',
+  },
+  {
+    id: 'skills',
+    accent: '#a78bfa',
+    tag: '// WIDGET · SKILLS',
+    title: 'Tech Stack Card',
+    desc: 'Grouped chip cloud of skills. Optionally highlight a skill or group.',
+    fields: [
+      { id:'skill-hl', label:'HIGHLIGHT (optional)', type:'text', placeholder:'e.g. Python, LiveKit, AI / ML' },
+    ],
+    fire: () => fire('skills', { skills: SKILLS, highlight: val('skill-hl') || null }),
+    label: '▸ FIRE SKILLS CARD',
+  },
+  {
+    id: 'experience',
+    accent: '#fb923c',
+    tag: '// WIDGET · EXPERIENCE',
+    title: 'Experience Timeline',
+    desc: 'Career timeline with roles, companies, dates, and bullet points.',
+    fields: [],
+    fire: () => fire('experience', { experience: EXPERIENCE }),
+    label: '▸ FIRE EXPERIENCE CARD',
+  },
+  {
+    id: 'contact',
+    accent: '#ffb700',
+    tag: '// WIDGET · CONTACT',
+    title: 'Contact Links',
+    desc: 'GitHub, LinkedIn, and email — all clickable. No parameters.',
+    fields: [],
+    fire: () => fire('contact'),
+    label: '▸ FIRE CONTACT CARD',
+  },
+  {
+    id: 'linkedin',
+    accent: '#4fa3e0',
+    tag: '// WIDGET · LINKEDIN',
+    title: 'LinkedIn Card',
+    desc: 'Focused LinkedIn profile card with a direct link to open the profile.',
+    fields: [],
+    fire: () => fire('linkedin'),
+    label: '▸ FIRE LINKEDIN CARD',
+  },
+];
+
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+/* ── Render panels ── */
+const grid = document.getElementById('grid');
+
+PANELS.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'panel';
+  div.style.setProperty('--accent', p.accent);
+
+  const fieldsHTML = p.fields.map(f => `
+    <div class="field">
+      <label for="${f.id}">${f.label}</label>
+      <input id="${f.id}" type="${f.type}" placeholder="${f.placeholder}">
+    </div>`).join('');
+
+  div.innerHTML = `
+    <div class="panel-bar"></div>
+    <div class="panel-tag">${p.tag}</div>
+    <div class="panel-title">${p.title}</div>
+    <div class="panel-desc">${p.desc}</div>
+    ${fieldsHTML}
+    <button class="btn-fire" style="border-color:${p.accent};color:${p.accent}">${p.label}</button>`;
+
+  /* Allow Enter key in inputs to fire */
+  div.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if(e.key==='Enter') p.fire(); });
+  });
+
+  div.querySelector('.btn-fire').addEventListener('click', p.fire);
+  grid.appendChild(div);
+});
+</script>
+</body>
+</html>
