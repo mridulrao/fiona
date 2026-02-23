@@ -561,11 +561,12 @@ const stack = document.getElementById('card-stack');
 const ME = {
   name:     'Mridul Rao',
   role:     'Software Engineer · AI & Automation',
-  bio:      'Building voice agents, RAG pipelines, and enterprise AI systems. Based in LA.',
+  bio:      'Building voice agents, RAG pipelines, and enterprise AI systems.',
   photo:    'https://github.com/mridulrao.png',
   github:   'https://github.com/mridulrao',
-  linkedin: 'https://linkedin.com/in/mridulrao',
-  email:    'mridul@example.com',
+  linkedin: 'https://www.linkedin.com/in/mridul-rao/',
+  medium:   'https://medium.com/@mridulrao674385',
+  email:    'mridulrao370@gmail.com',
 };
 
 const TTL     = 10000;
@@ -814,6 +815,11 @@ function cardContact() {
         <span class="lr-text"><div class="lr-label">LINKEDIN</div><div class="lr-val">linkedin.com/in/mridulrao</div></span>
         <span class="lr-arrow">→</span>
       </a>
+      <a class="link-row" href="${ME.medium}" target="_blank" rel="noopener">
+        <span class="lr-icon">💼</span>
+        <span class="lr-text"><div class="lr-label">MEDIUM</div><div class="lr-val">medium.com/@mridulrao674385</div></span>
+        <span class="lr-arrow">→</span>
+      </a>
       <a class="link-row" href="mailto:${ME.email}">
         <span class="lr-icon">✉</span>
         <span class="lr-text"><div class="lr-label">EMAIL</div><div class="lr-val">${ME.email}</div></span>
@@ -869,10 +875,30 @@ window.YUKI = {
 const bc = new BroadcastChannel('YUKI_WIDGETS');
 bc.onmessage = (e) => { if(e.data?.type==='YUKI_WIDGET') dispatch(e.data); };
 
+const sse = new EventSource('http://localhost:3001/widgets');
+sse.onmessage = (e) => {
+  try {
+    const msg = JSON.parse(e.data);
+    if (msg?.type === 'YUKI_WIDGET') dispatch(msg);
+  } catch(err) {
+    console.error('[SSE] Parse error:', err);
+  }
+};
+sse.onerror = () => console.warn('[SSE] Not reachable — is server.js running?');
+
 /* ── LiveKit data messages ──────────────────────────────────── */
 function onData(payload) {
   let msg; try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
   if (msg?.type === 'YUKI_WIDGET') dispatch(msg);
+  // ── Transcript logging ──────────────────────────────────
+  if (msg?.type === 'TRANSCRIPT') {
+    const isUser = msg.role === 'user';
+    console.log(
+      `%c${isUser ? '🎙 USER' : '🤖 YUKI'}  %c${msg.text}`,
+      `color: ${isUser ? '#00ffe7' : '#ff006e'}; font-weight: bold`,
+      'color: inherit; font-weight: normal'
+    );
+  }
 }
 
 /* ── LiveKit connection ─────────────────────────────────────── */
@@ -885,11 +911,17 @@ async function connect() {
       body: JSON.stringify({ identity:'user_'+Math.random().toString(36).slice(2,6) })
     }).then(r=>r.json());
 
+    // Set up data message listener BEFORE connecting  
+    room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {  
+      console.log('Data received:', { participant: participant?.identity, topic, kind });  
+      onData(payload);  
+    })
+
     await room.connect(serverUrl, token);
     await room.localParticipant.setMicrophoneEnabled(true);
     showBtns('post'); setState('connected', `ROOM: ${roomName}`); updMic();
 
-    room.on(RoomEvent.DataReceived, onData);
+    // room.on(RoomEvent.DataReceived, onData);
 
     room.on(RoomEvent.TrackSubscribed, (track) => {
       if (track.kind !== Track.Kind.Audio) return;

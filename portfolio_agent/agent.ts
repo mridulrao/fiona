@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { cli } from '@livekit/agents';  
   
 import { INSTRUCTIONS } from './prompt.js';  
-import { demoTool } from './tools.js';  
-  
+import { handleUserInput, clearChatHistory } from './background_agent.js';
+
 dotenv.config({ path: '.env.local' });  
   
 // Validate required environment variables  
@@ -26,7 +26,6 @@ class Assistant extends voice.Agent {
   constructor() {  
     super({  
       instructions: INSTRUCTIONS,  
-      // tools: { demoTool }  
     });  
   }  
 }  
@@ -42,63 +41,70 @@ export default defineAgent({
       throw error;  
     }  
   },  
-  entry: async (ctx: JobContext) => {  
-    console.log('Agent entry point called');  
+  entry: async (ctx: JobContext) => {    
   
     let session: voice.AgentSession;  
   
     try {  
-      console.log('Initializing plugins...');  
-          
-      // Test each plugin initialization separately  
-      console.log('Initializing Deepgram STT...');  
-      const stt = new deepgram.STT();  
-          
-      console.log('Initializing OpenAI LLM...');  
+      const stt = new deepgram.STT();   
       const llm = new openai.LLM({  
         baseURL: 'https://api.groq.com/openai/v1',  
         apiKey: process.env.GROQ_API_KEY,  
-        model: 'llama-3.3-70b-versatile',  
-      });  
-          
-      console.log('Initializing ElevenLabs TTS...');  
+        model: 'llama-3.1-8b-instant',  
+      });   
       const tts = new elevenlabs.TTS({  
         voice: {   
           id: "0ptCJp0xgdabdcpVtCB5"   
         },  
         model: "eleven_flash_v2_5"  
       });  
-   
-      console.log('Creating AgentSession...');  
+
       session = new voice.AgentSession({  
         vad: ctx.proc.userData.vad! as silero.VAD,  
         stt,  
         llm,  
         tts,  
       });  
-   
-      console.log('Starting session...');  
+
       await session.start({  
         agent: new Assistant(),  
         room: ctx.room,  
         inputOptions: {  
-          // LiveKit Cloud enhanced noise cancellation  
-          // - If self-hosting, omit this parameter  
-          // - For telephony applications, use `BackgroundVoiceCancellationTelephony` for best results  
           noiseCancellation: BackgroundVoiceCancellation(),  
         },  
       });  
-      console.log('Agent session started');  
-   
-      console.log('Connecting to room...');  
       await ctx.connect();  
-      console.log('Connected to LiveKit server');  
-   
-      console.log('Generating initial reply...');  
-      await session.generateReply({  
-        instructions: 'Greet the user and offer help.',  
-      });  
-      console.log('Initial reply sent');  
+
+      // ── User transcript ──────────────────────────────────────────────
+      session.on('user_input_transcribed', async (event: any) => {  
+        if (event.isFinal) {  
+          const text = event.transcript;  
+          console.log('User:', text);  
+          await handleUserInput(text);  
+          if (text) {  
+            ctx.room.localParticipant.publishData(  
+              Buffer.from(JSON.stringify({ type: 'TRANSCRIPT', role: 'user', text })),  
+              { reliable: true }  
+            );  
+          }  
+        }  
+      });
+
+      // ── Agent transcript ─────────────────────────────────────────────
+      session.on('conversation_item_added', (event: any) => {
+        if (event.item.type === 'message') {
+          const text: string = event.item.content;
+          console.log('Agent:', text);
+          if (text) {
+            ctx.room.localParticipant.publishData(
+              Buffer.from(JSON.stringify({ type: 'TRANSCRIPT', role: 'assistant', text })),
+              { reliable: true }
+            );
+          }
+        }
+      });
+      
+      await session.say('Hi, this is Yuki. How can I help you today?');
    
     } catch (error) {  
       console.error('Error in agent entry:', error);  

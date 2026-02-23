@@ -38,6 +38,9 @@ importers:
       livekit-server-sdk:
         specifier: ^2.15.0
         version: 2.15.0
+      openai:
+        specifier: ^6.22.0
+        version: 6.22.0(ws@8.19.0)(zod@4.3.6)
     devDependencies:
       '@types/node':
         specifier: ^25.2.3
