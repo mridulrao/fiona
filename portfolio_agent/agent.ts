@@ -10,6 +10,7 @@ import { cli } from '@livekit/agents';
   
 import { INSTRUCTIONS } from './prompt.js';  
 import { handleUserInput, clearChatHistory } from './background_agent.js';
+import { getUserInput } from './livekit_tools.js'; 
 
 dotenv.config({ path: '.env.local' });  
   
@@ -26,16 +27,17 @@ class Assistant extends voice.Agent {
   constructor() {  
     super({  
       instructions: INSTRUCTIONS,  
+      tools: {
+        getUserInput
+      }
     });  
   }  
 }  
   
 export default defineAgent({  
   prewarm: async (proc) => {  
-    console.log('Prewarming agent...');  
     try {  
       proc.userData.vad = await silero.VAD.load();  
-      console.log('VAD loaded');  
     } catch (error) {  
       console.error('Failed to load VAD:', error);  
       throw error;  
@@ -46,18 +48,48 @@ export default defineAgent({
     let session: voice.AgentSession;  
   
     try {  
-      const stt = new deepgram.STT();   
+      const stt = new deepgram.STT({
+        model: "nova-3",
+        language: "en-IN",
+        detectLanguage: false,
+
+        interimResults: true,
+        punctuate: true,
+        smartFormat: true,
+        numerals: true,
+        profanityFilter: false,
+        fillerWords: false,
+
+        noDelay: true,
+        endpointing: 25,
+        dictation: false,
+        diarize: false,
+
+        sampleRate: 16000,
+        numChannels: 1,
+
+        //keywords: [["livekit", 2.0], ["elevenlabs", 2.5]],
+        //keyterm: ["Mridul", "Groq", "Llama"],
+        mipOptOut: false,
+      });   
       const llm = new openai.LLM({  
         baseURL: 'https://api.groq.com/openai/v1',  
         apiKey: process.env.GROQ_API_KEY,  
-        model: 'llama-3.1-8b-instant',  
+        model: 'openai/gpt-oss-20b',  
       });   
       const tts = new elevenlabs.TTS({  
-        voice: {   
-          id: "0ptCJp0xgdabdcpVtCB5"   
-        },  
-        model: "eleven_flash_v2_5"  
+        voiceId: "mActWQg9kibLro6Z2ouY",  
+        model: "eleven_flash_v2_5" ,
+        voiceSettings: {
+          stability: 0.5,
+          similarity_boost: 0.55,
+          style: 0.3,
+          speed: 1.0,
+          use_speaker_boost: true,
+        }, 
       });  
+
+      await ctx.connect();
 
       session = new voice.AgentSession({  
         vad: ctx.proc.userData.vad! as silero.VAD,  
@@ -72,8 +104,7 @@ export default defineAgent({
         inputOptions: {  
           noiseCancellation: BackgroundVoiceCancellation(),  
         },  
-      });  
-      await ctx.connect();  
+      });    
 
       // ── User transcript ──────────────────────────────────────────────
       session.on('user_input_transcribed', async (event: any) => {  

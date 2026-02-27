@@ -147,18 +147,15 @@
 
     /* ═══════════════════════════════════════════════════════════════
        FLOATING CARDS
-       Full-screen overlay. Cards are placed at randomised positions
-       across the viewport and gently bob up/down.
     ═══════════════════════════════════════════════════════════════ */
 
     #card-stack {
       position: fixed;
       inset: 0;
       z-index: 500;
-      pointer-events: none; /* cards themselves re-enable pointer-events */
+      pointer-events: none;
     }
 
-    /* ── Base card shell ── */
     .card {
       width: 278px;
       background: rgba(2,5,9,0.97);
@@ -166,7 +163,6 @@
       position: absolute;
       overflow: hidden;
       pointer-events: all;
-      /* Fade + rise entrance */
       opacity: 0;
       transform: translateY(18px);
       animation:
@@ -184,28 +180,19 @@
       50%      { transform: translateY(var(--bob-amp, -8px)); }
     }
 
-    .card.out {
-      animation: floatOut 0.35s cubic-bezier(0.6, 0, 1, 0.4) forwards;
-    }
-
+    .card.out { animation: floatOut 0.35s cubic-bezier(0.6, 0, 1, 0.4) forwards; }
     @keyframes floatOut {
       from { opacity: 1; transform: translateY(0px);  }
       to   { opacity: 0; transform: translateY(-14px); }
     }
 
-    /* CRT grain overlay on each card */
     .card::before {
       content:''; position:absolute; inset:0; pointer-events:none; z-index:50;
       background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,0.016) 2px,rgba(0,255,231,0.016) 4px);
     }
 
-    /* Accent bar — top edge */
-    .card-bar {
-      height: 2px;
-      background: linear-gradient(90deg, var(--cc, var(--cyan)), transparent 75%);
-    }
+    .card-bar { height: 2px; background: linear-gradient(90deg, var(--cc, var(--cyan)), transparent 75%); }
 
-    /* Drain timer — bottom edge */
     .card-drain {
       position: absolute; bottom:0; left:0;
       height: 1px; width:100%; background:var(--cc, var(--cyan)); opacity:0.35;
@@ -214,14 +201,11 @@
     }
     @keyframes drain { to { transform:scaleX(0); } }
 
-    /* Meta row: type badge + close button */
     .card-meta {
       display:flex; align-items:center; justify-content:space-between;
       padding: 7px 10px 0;
     }
-    .card-type {
-      font-size:0.36rem; letter-spacing:0.4em; color:var(--text-dim);
-    }
+    .card-type { font-size:0.36rem; letter-spacing:0.4em; color:var(--text-dim); }
     .card-x {
       background:none; border:none; cursor:pointer;
       color:var(--text-dim); font-size:0.58rem;
@@ -230,10 +214,8 @@
     }
     .card-x:hover { color:var(--magenta); }
 
-    /* Body padding */
     .card-body { padding: 6px 12px 15px; position:relative; z-index:1; }
 
-    /* ── Shared typography inside cards ── */
     .c-title {
       font-family:'Orbitron',sans-serif; font-weight:700;
       font-size:0.72rem; letter-spacing:0.12em;
@@ -245,9 +227,7 @@
       color:var(--text-dim); margin-top:2px; margin-bottom:8px;
       line-height: 1.6;
     }
-    .c-divider { border:none; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0; }
 
-    /* ── Link row ── */
     .link-row {
       display:flex; align-items:center; gap:10px;
       padding:8px 9px; margin-top:5px;
@@ -313,29 +293,123 @@
     }
     .chip.hl { border-color:var(--cc,var(--cyan)); color:var(--cc,var(--cyan)); box-shadow:0 0 8px rgba(0,255,231,0.12); }
 
-    /* ── Experience card ── */
-    .exp-entry { margin-top:10px; position:relative; padding-left:14px; }
-    .exp-entry:first-child { margin-top:0; }
-    .exp-entry::before {
-      content:''; position:absolute; left:0; top:6px; bottom:-14px;
-      width:1px; background:rgba(255,255,255,0.06);
+    /* ─────────────────────────────────────────────────────────────
+       FORM INPUT MODAL (YUKI_WIDGET: getuserinput)
+    ───────────────────────────────────────────────────────────── */
+    #form-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.55);
+      pointer-events: all;
     }
-    .exp-entry:last-child::before { display:none; }
-    .exp-entry::after {
-      content:''; position:absolute; left:-3px; top:5px;
-      width:7px; height:7px; border-radius:50%;
-      background:var(--cc,var(--cyan));
-      box-shadow:0 0 6px var(--cc,var(--cyan));
+
+    #form-modal.on { display: flex; }
+
+    .form-shell {
+      width: min(440px, 92vw);
+      background: rgba(2,5,9,0.97);
+      border: 1px solid rgba(0,255,231,0.35);
+      box-shadow: 0 0 18px rgba(0,255,231,0.10);
+      position: relative;
+      overflow: hidden;
+      clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
     }
-    .exp-role    { font-size:0.56rem; letter-spacing:0.1em; color:var(--text); }
-    .exp-company { font-size:0.42rem; letter-spacing:0.16em; color:var(--cc,var(--cyan)); margin-top:1px; }
-    .exp-period  { font-size:0.38rem; letter-spacing:0.18em; color:var(--text-dim); margin-top:1px; margin-bottom:5px; }
-    .exp-bullets { list-style:none; }
-    .exp-bullets li {
-      font-size:0.42rem; letter-spacing:0.08em; color:var(--text-dim);
-      line-height:1.7; display:flex; gap:6px; align-items:flex-start;
+
+    .form-shell::before {
+      content:'';
+      position:absolute; inset:0;
+      pointer-events:none; z-index: 3;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,231,0.014) 2px,
+        rgba(0,255,231,0.014) 4px
+      );
     }
-    .exp-bullets li::before { content:'▸'; color:var(--cc,var(--cyan)); flex-shrink:0; margin-top:1px; }
+
+    .form-bar { height: 2px; background: linear-gradient(90deg, var(--cyan), transparent 75%); }
+
+    .form-head {
+      padding: 12px 14px 8px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .form-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .form-x {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      font-family: 'Share Tech Mono', monospace;
+      padding: 0 4px;
+      z-index: 5;
+    }
+    .form-x:hover { color: var(--magenta); }
+
+    .form-body { padding: 0 14px 14px; position: relative; z-index: 4; }
+
+    .form-prompt {
+      font-size: 0.48rem;
+      letter-spacing: 0.16em;
+      color: var(--text-dim);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .form-row { margin-bottom: 10px; }
+    .form-label {
+      font-size: 0.40rem;
+      letter-spacing: 0.28em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .form-req { color: var(--amber); letter-spacing: 0.22em; font-size: 0.34rem; }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      outline: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.56rem;
+      letter-spacing: 0.08em;
+    }
+    .form-input:focus {
+      border-color: rgba(0,255,231,0.45);
+      box-shadow: 0 0 0 2px rgba(0,255,231,0.08);
+    }
+
+    .form-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -375,6 +449,50 @@
       <button class="btn prim" id="btn-start">⬡ CONNECT</button>
       <button class="btn mic  hide" id="btn-mic">🔇 MUTE</button>
       <button class="btn dng  hide" id="btn-disc">✕ TERMINATE</button>
+    </div>
+  </div>
+
+  <!-- ── Get User Input widget modal (hidden by default) ── -->
+  <div id="form-modal" aria-hidden="true">
+    <div class="form-shell" role="dialog" aria-modal="true">
+      <div class="form-bar"></div>
+      <div class="form-head">
+        <div>
+          <div class="form-title" id="form-title">CONTACT YUKI</div>
+        </div>
+        <button class="form-x" id="form-x">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-prompt" id="form-prompt">Leave your details and message below.</div>
+
+        <!-- Hardcoded fields: name · contact · message -->
+        <div class="form-row">
+          <div class="form-label">
+            <span>NAME</span>
+            <span class="form-req">REQUIRED</span>
+          </div>
+          <input class="form-input" id="fi-name"    name="name"    type="text" placeholder="Your name"        data-required="1" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-row">
+          <div class="form-label">
+            <span>CONTACT</span>
+            <span class="form-req">REQUIRED</span>
+          </div>
+          <input class="form-input" id="fi-contact" name="contact" type="text" placeholder="Email or phone"   data-required="1" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-row">
+          <div class="form-label">
+            <span>MESSAGE</span>
+            <span class="form-req" style="opacity:.35">OPTIONAL</span>
+          </div>
+          <input class="form-input" id="fi-message" name="message" type="text" placeholder="Anything to add?" data-required="0" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn dng"  type="button" id="form-cancel">✕ CANCEL</button>
+          <button class="btn prim" type="button" id="form-submit">⬡ SUBMIT</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -551,13 +669,10 @@ const updMic = () => {
 
 /* ═══════════════════════════════════════════════════════════════
    FLOATING CARD SYSTEM
-   Cards are placed at non-overlapping positions spread across
-   the viewport, keeping clear of the central UI.
 ═══════════════════════════════════════════════════════════════ */
 
 const stack = document.getElementById('card-stack');
 
-/* Personal data */
 const ME = {
   name:     'Mridul Rao',
   role:     'Software Engineer · AI & Automation',
@@ -569,53 +684,41 @@ const ME = {
   email:    'mridulrao370@gmail.com',
 };
 
-const TTL     = 10000;
-const TTL_LNG = 14000;
+const TTL     = 20000;
+const TTL_LNG = 24000;
 
-/* ── Position engine ──────────────────────────────────────── */
-/* Divide viewport into placement zones, avoiding the centre.
-   Zones: top-left, top-right, bottom-left, bottom-right, mid-left, mid-right */
-const CARD_W = 294; // card width + breathing room
-const CARD_H = 340; // generous estimate for card height + breathing room
+const CARD_W = 294;
+const CARD_H = 340;
 
 function getPlacementZones() {
   const vw = innerWidth, vh = innerHeight;
   const cx = vw / 2, cy = vh / 2;
-  const safeR = Math.min(vw, vh) * 0.32; // radius around centre to avoid
+  const safeR = Math.min(vw, vh) * 0.32;
 
-  const pad = 24; // viewport edge padding
+  const pad = 24;
   const zones = [
-    // top-left
     { x: pad, y: pad, w: cx - safeR * 0.7 - pad, h: cy - safeR * 0.7 - pad },
-    // top-right
     { x: cx + safeR * 0.7, y: pad, w: vw - (cx + safeR * 0.7) - pad, h: cy - safeR * 0.7 - pad },
-    // bottom-left
     { x: pad, y: cy + safeR * 0.7, w: cx - safeR * 0.7 - pad, h: vh - (cy + safeR * 0.7) - pad },
-    // bottom-right
     { x: cx + safeR * 0.7, y: cy + safeR * 0.7, w: vw - (cx + safeR * 0.7) - pad, h: vh - (cy + safeR * 0.7) - pad },
-    // mid-left strip
     { x: pad, y: cy - CARD_H / 2, w: cx - safeR * 0.85 - pad, h: CARD_H },
-    // mid-right strip
     { x: cx + safeR * 0.85, y: cy - CARD_H / 2, w: vw - (cx + safeR * 0.85) - pad, h: CARD_H },
-  ].filter(z => z.w >= CARD_W * 0.7 && z.h >= 80); // only zones with enough room
+  ].filter(z => z.w >= CARD_W * 0.7 && z.h >= 80);
 
   return zones;
 }
 
-/* Track placed rects to avoid overlap */
 const placed = [];
 
 function randomPosition() {
   const zones = getPlacementZones();
   if (!zones.length) {
-    // Fallback: random viewport position with edge padding
     return {
       left: Math.random() * Math.max(innerWidth  - CARD_W - 32, 32) + 16,
       top:  Math.random() * Math.max(innerHeight - CARD_H - 32, 32) + 16,
     };
   }
 
-  /* Shuffle zones so cards don't always prefer same zone */
   const shuffled = zones.sort(() => Math.random() - 0.5);
 
   for (const zone of shuffled) {
@@ -623,12 +726,10 @@ function randomPosition() {
     const maxY = zone.y + zone.h - CARD_H;
     if (maxX < zone.x || maxY < zone.y) continue;
 
-    /* Try a few random spots in this zone */
     for (let attempt = 0; attempt < 8; attempt++) {
       const left = zone.x + Math.random() * (maxX - zone.x);
       const top  = zone.y + Math.random() * (maxY - zone.y);
 
-      /* Check overlap with existing placed cards */
       const gap = 16;
       const overlaps = placed.some(r =>
         left < r.left + r.w + gap &&
@@ -640,7 +741,6 @@ function randomPosition() {
     }
   }
 
-  /* All zones tried — pick a least-bad random fallback */
   const zone = shuffled[0];
   return {
     left: Math.min(Math.max(zone.x, 16), innerWidth  - CARD_W - 16),
@@ -648,11 +748,9 @@ function randomPosition() {
   };
 }
 
-/* ── Card factory ─────────────────────────────────────────── */
 function killCard(el) {
   if (el._dead) return; el._dead = true;
   clearTimeout(el._tid);
-  /* Remove from placed registry */
   const idx = placed.indexOf(el._rect);
   if (idx !== -1) placed.splice(idx, 1);
   el.classList.add('out');
@@ -660,19 +758,15 @@ function killCard(el) {
 }
 
 function makeCard({ id, color, ttl = TTL, typeLabel, bodyHTML }) {
-  /* Remove existing card of same type */
   const old = stack.querySelector(`[data-id="${id}"]`);
   if (old) killCard(old);
 
   const { left, top } = randomPosition();
-
-  /* Register this placement */
   const rect = { left, top, w: CARD_W, h: CARD_H };
   placed.push(rect);
 
-  /* Unique bob parameters per card */
   const bobDur   = (3.2 + Math.random() * 2.4).toFixed(2) + 's';
-  const bobDelay = (Math.random() * -3).toFixed(2) + 's'; // negative = start mid-cycle
+  const bobDelay = (Math.random() * -3).toFixed(2) + 's';
   const bobAmp   = -(6 + Math.random() * 6).toFixed(1)    + 'px';
 
   const el = document.createElement('div');
@@ -843,33 +937,113 @@ function cardLinkedin() {
   });
 }
 
-/* ── Dispatcher ─────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   GET USER INPUT WIDGET
+───────────────────────────────────────────────────────────── */
+
+const formModal     = document.getElementById('form-modal');
+const formXBtn      = document.getElementById('form-x');
+const formCancelBtn = document.getElementById('form-cancel');
+const formSubmitBtn = document.getElementById('form-submit');
+
+let activeRequestId = null;
+
+function openFormWidget(msg) {
+  // If targeted to a specific identity, only show to that participant
+  if (msg.identity && room?.localParticipant?.identity && msg.identity !== room.localParticipant.identity) return;
+  if (!msg.requestId) return;
+
+  activeRequestId = msg.requestId;
+
+  // Clear any previous values
+  document.getElementById('fi-name').value    = '';
+  document.getElementById('fi-contact').value = '';
+  document.getElementById('fi-message').value = '';
+
+  formModal.classList.add('on');
+  formModal.setAttribute('aria-hidden', 'false');
+  document.getElementById('fi-name').focus();
+}
+
+function closeFormWidget() {
+  formModal.classList.remove('on');
+  formModal.setAttribute('aria-hidden', 'true');
+  activeRequestId = null;
+}
+
+async function publishToRoom(obj) {
+  const encoded = new TextEncoder().encode(JSON.stringify(obj));
+  await room.localParticipant.publishData(encoded, { reliable: true });
+}
+
+function validateAndCollect() {
+  const name    = document.getElementById('fi-name').value.trim();
+  const contact = document.getElementById('fi-contact').value.trim();
+  const message = document.getElementById('fi-message').value.trim();
+
+  // Highlight missing required fields
+  let valid = true;
+  for (const [id, val] of [['fi-name', name], ['fi-contact', contact]]) {
+    const el = document.getElementById(id);
+    if (!val) {
+      el.style.borderColor = 'rgba(255,0,110,0.6)';
+      setTimeout(() => { el.style.borderColor = ''; }, 700);
+      if (valid) el.focus();
+      valid = false;
+    }
+  }
+  if (!valid) return null;
+
+  return { name, contact, message };
+}
+
+formSubmitBtn.onclick = async () => {
+  if (!activeRequestId) return;
+  const values = validateAndCollect();
+  if (!values) return;
+
+  await publishToRoom({
+    type:      'YUKI_GETUSERINPUT_RESULT',
+    requestId: activeRequestId,
+    values,
+    ts:        Date.now(),
+  });
+
+  closeFormWidget();
+};
+
+async function cancelForm() {
+  if (!activeRequestId) return;
+
+  await publishToRoom({
+    type:      'YUKI_GETUSERINPUT_CANCEL',
+    requestId: activeRequestId,
+    ts:        Date.now(),
+  });
+
+  closeFormWidget();
+}
+
+formCancelBtn.onclick = cancelForm;
+formXBtn.onclick      = cancelForm;
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && formModal.classList.contains('on')) cancelForm();
+});
+
+/* ── Widget dispatcher ──────────────────────────────────────── */
 function dispatch(msg) {
   switch (msg.widget) {
-    case 'about':      cardAbout();             break;
-    case 'projects':   cardProjects(msg);       break;
-    case 'skills':     cardSkills(msg);         break;
-    case 'experience': cardExperience(msg);     break;
-    case 'contact':    cardContact();           break;
-    case 'linkedin':   cardLinkedin();          break;
+    case 'about':        cardAbout();           break;
+    case 'projects':     cardProjects(msg);     break;
+    case 'skills':       cardSkills(msg);       break;
+    case 'experience':   cardExperience(msg);   break;
+    case 'contact':      cardContact();         break;
+    case 'linkedin':     cardLinkedin();        break;
+    case 'getuserinput': openFormWidget(msg);   break;  // ← form widget
     default: console.warn('[YUKI] Unknown widget:', msg.widget);
   }
 }
-
-/* ── Console / window API ───────────────────────────────────── */
-window.YUKI = {
-  about:      ()  => cardAbout(),
-  projects:   (o) => cardProjects(o),
-  skills:     (o) => cardSkills(o),
-  experience: ()  => cardExperience({ experience:[
-    { role:'AI Engineer', company:'Current Role', period:'2023 – Present',
-      bullets:['Voice agents with LiveKit + custom STT/TTS','RAG on pgvector + Azure OpenAI','ServiceNow automation via Apigee'] },
-    { role:'Software Engineer', company:'Previous Role', period:'2021 – 2023',
-      bullets:['Multi-agent IT support orchestration','Docker / K8s deployments','Edge model inference on Android & iOS'] },
-  ]}),
-  contact:    ()  => cardContact(),
-  linkedin:   ()  => cardLinkedin(),
-};
 
 /* ── BroadcastChannel from test panel ───────────────────────── */
 const bc = new BroadcastChannel('YUKI_WIDGETS');
@@ -890,7 +1064,7 @@ sse.onerror = () => console.warn('[SSE] Not reachable — is server.js running?'
 function onData(payload) {
   let msg; try { msg = JSON.parse(new TextDecoder().decode(payload)); } catch { return; }
   if (msg?.type === 'YUKI_WIDGET') dispatch(msg);
-  // ── Transcript logging ──────────────────────────────────
+
   if (msg?.type === 'TRANSCRIPT') {
     const isUser = msg.role === 'user';
     console.log(
@@ -911,17 +1085,14 @@ async function connect() {
       body: JSON.stringify({ identity:'user_'+Math.random().toString(36).slice(2,6) })
     }).then(r=>r.json());
 
-    // Set up data message listener BEFORE connecting  
-    room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {  
-      console.log('Data received:', { participant: participant?.identity, topic, kind });  
-      onData(payload);  
-    })
+    room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+      console.log('Data received:', { participant: participant?.identity, topic, kind });
+      onData(payload);
+    });
 
     await room.connect(serverUrl, token);
     await room.localParticipant.setMicrophoneEnabled(true);
     showBtns('post'); setState('connected', `ROOM: ${roomName}`); updMic();
-
-    // room.on(RoomEvent.DataReceived, onData);
 
     room.on(RoomEvent.TrackSubscribed, (track) => {
       if (track.kind !== Track.Kind.Audio) return;
