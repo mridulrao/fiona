@@ -8,9 +8,9 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';  
 import { cli } from '@livekit/agents';  
   
-import { INSTRUCTIONS } from './prompt.js';  
-import { handleUserInput, clearChatHistory } from './background_agent.js';
-import { getUserInput } from './livekit_tools.js'; 
+import { INSTRUCTIONS } from '../instructions/prompt.js';  
+import { handleUserInput, clearChatHistory } from '../agents/background_agent.js';
+import { getUserInput } from '../tools/livekit_tools.js'; 
 
 dotenv.config({ path: '.env.local' });  
   

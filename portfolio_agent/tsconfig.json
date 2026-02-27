@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,  
     "types": ["node"]  
   },  
-  "include": ["agent.ts"],  
+  "include": ["agents/agent.ts"],  
   "exclude": ["node_modules", "dist"]  
 }

@@ -6,8 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "download-files": "pnpm run build && node dist/agent.js download-files",
-    "dev": "tsx agent.ts dev"
+    "download-files": "pnpm run build && node dist/agents/agent.js download-files",
+    "dev": "tsx ./agents/agent.ts dev"
   },
   "keywords": [],
   "author": "",
@@ -29,7 +29,9 @@
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
+    "concurrently": "^9.2.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.4"
   }
 }

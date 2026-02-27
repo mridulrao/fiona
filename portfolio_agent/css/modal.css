@@ -1,0 +1,122 @@
+/* ─────────────────────────────────────────────────────────────
+   FORM INPUT MODAL (YUKI_WIDGET: getuserinput)
+───────────────────────────────────────────────────────────── */
+#form-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: all;
+}
+
+#form-modal.on { display: flex; }
+
+.form-shell {
+  width: min(440px, 92vw);
+  background: rgba(2,5,9,0.97);
+  border: 1px solid rgba(0,255,231,0.35);
+  box-shadow: 0 0 18px rgba(0,255,231,0.10);
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+}
+
+.form-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,231,0.014) 2px,
+    rgba(0,255,231,0.014) 4px
+  );
+}
+
+.form-bar { height: 2px; background: linear-gradient(90deg, var(--cyan), transparent 75%); }
+
+.form-head {
+  padding: 12px 14px 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.form-title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--cyan);
+  text-shadow: 0 0 10px var(--cyan-glow);
+}
+
+.form-x {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 0 4px;
+  z-index: 5;
+}
+.form-x:hover { color: var(--magenta); }
+
+.form-body { padding: 0 14px 14px; position: relative; z-index: 4; }
+
+.form-prompt {
+  font-size: 0.48rem;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.form-row { margin-bottom: 10px; }
+
+.form-label {
+  font-size: 0.40rem;
+  letter-spacing: 0.28em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.form-req { color: var(--amber); letter-spacing: 0.22em; font-size: 0.34rem; }
+
+.form-input {
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--text);
+  outline: none;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+}
+
+.form-input:focus {
+  border-color: rgba(0,255,231,0.45);
+  box-shadow: 0 0 0 2px rgba(0,255,231,0.08);
+}
+
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

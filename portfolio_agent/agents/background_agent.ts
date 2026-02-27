@@ -1,6 +1,6 @@
 // background-agent.ts
 import OpenAI from 'openai';
-import { TOOLS, resolveToolPayload, sendWidget, ToolName } from './openai_tools.js';
+import { TOOLS, resolveToolPayload, sendWidget, ToolName } from '../tools/openai_tools.js';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
