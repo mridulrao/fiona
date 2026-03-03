@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     command: pnpm run server
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     env_file:
       - .env.local
     restart: unless-stopped
@@ -22,3 +22,22 @@ services:
     depends_on:
       - web
     restart: unless-stopped
+
+  caddy:
+    image: caddy:2.8-alpine
+    env_file:
+      - .env.local
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

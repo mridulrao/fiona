@@ -246,6 +246,15 @@ export function initLivekit({ room, ui }) {
     btnStart.style.pointerEvents = 'none';
 
     try {
+      const isLocalhost =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!window.isSecureContext && !isLocalhost) {
+        throw new Error('Microphone access requires HTTPS (or localhost). Open this site over https://');
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Browser microphone API is unavailable in this context. Use HTTPS in Chrome/Safari.');
+      }
+
       // Prime AudioContext on user gesture to improve playback reliability.
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
       if (audioContext.state === 'suspended') await audioContext.resume();
@@ -290,6 +299,7 @@ export function initLivekit({ room, ui }) {
   }
 
   function toggleMic() {
+    if (!room.localParticipant) return;
     const on = room.localParticipant.isMicrophoneEnabled;
     room.localParticipant.setMicrophoneEnabled(!on);
     ui.updMic();
