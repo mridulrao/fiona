@@ -143,7 +143,7 @@ function makeCard({ id, color, ttl = TTL, typeLabel, bodyHTML }) {
 export function cardAbout() {
   makeCard({
     id: 'about',
-    color: '#00ffe7',
+    color: 'rgba(28,28,32,0.3)',
     ttl: TTL,
     typeLabel: '// ABOUT',
     bodyHTML: `
@@ -182,7 +182,7 @@ export function cardProjects({ projects = [], filter = null } = {}) {
 
   makeCard({
     id: 'projects',
-    color: '#00ffe7',
+    color: 'rgba(35,35,42,0.3)',
     ttl: TTL_LNG,
     typeLabel: '// PROJECTS',
     bodyHTML: `
@@ -211,7 +211,7 @@ export function cardSkills({ skills = [], highlight = null } = {}) {
 
   makeCard({
     id: 'skills',
-    color: '#a78bfa',
+    color: 'rgba(50,50,58,0.28)',
     ttl: TTL,
     typeLabel: '// SKILLS',
     bodyHTML: `
@@ -235,7 +235,7 @@ export function cardExperience({ experience = [] } = {}) {
 
   makeCard({
     id: 'experience',
-    color: '#fb923c',
+    color: 'rgba(72,72,82,0.3)',
     ttl: TTL_LNG,
     typeLabel: '// EXPERIENCE',
     bodyHTML: `
@@ -248,29 +248,29 @@ export function cardExperience({ experience = [] } = {}) {
 export function cardContact() {
   makeCard({
     id: 'contact',
-    color: '#ffb700',
+    color: 'rgba(30,30,35,0.34)',
     ttl: TTL_LNG,
     typeLabel: '// CONTACT',
     bodyHTML: `
       <div class="c-title">Get in Touch</div>
       <div class="c-sub" style="margin-bottom:4px">Reach out anytime</div>
       <a class="link-row" href="${ME.github}" target="_blank" rel="noopener">
-        <span class="lr-icon">⬡</span>
+        <span class="lr-icon">GH</span>
         <span class="lr-text"><div class="lr-label">GITHUB</div><div class="lr-val">github.com/mridulrao</div></span>
         <span class="lr-arrow">→</span>
       </a>
       <a class="link-row" href="${ME.linkedin}" target="_blank" rel="noopener">
-        <span class="lr-icon">💼</span>
+        <span class="lr-icon">IN</span>
         <span class="lr-text"><div class="lr-label">LINKEDIN</div><div class="lr-val">linkedin.com/in/mridulrao</div></span>
         <span class="lr-arrow">→</span>
       </a>
       <a class="link-row" href="${ME.medium}" target="_blank" rel="noopener">
-        <span class="lr-icon">💼</span>
+        <span class="lr-icon">MD</span>
         <span class="lr-text"><div class="lr-label">MEDIUM</div><div class="lr-val">medium.com/@mridulrao674385</div></span>
         <span class="lr-arrow">→</span>
       </a>
       <a class="link-row" href="mailto:${ME.email}">
-        <span class="lr-icon">✉</span>
+        <span class="lr-icon">@</span>
         <span class="lr-text"><div class="lr-label">EMAIL</div><div class="lr-val">${ME.email}</div></span>
         <span class="lr-arrow">→</span>
       </a>`,
@@ -280,14 +280,14 @@ export function cardContact() {
 export function cardLinkedin() {
   makeCard({
     id: 'linkedin',
-    color: '#4fa3e0',
+    color: 'rgba(34,34,40,0.32)',
     ttl: TTL,
     typeLabel: '// LINKEDIN',
     bodyHTML: `
       <div class="c-title">${ME.name}</div>
       <div class="c-sub">${ME.role}</div>
       <a class="link-row" href="${ME.linkedin}" target="_blank" rel="noopener">
-        <span class="lr-icon">💼</span>
+        <span class="lr-icon">IN</span>
         <span class="lr-text"><div class="lr-label">OPEN PROFILE</div><div class="lr-val">linkedin.com/in/mridulrao</div></span>
         <span class="lr-arrow">→</span>
       </a>`,

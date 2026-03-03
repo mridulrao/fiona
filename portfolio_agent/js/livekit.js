@@ -13,6 +13,8 @@ export function initLivekit({ room, ui }) {
   const { btnStart, btnMic, btnDisc, sTxt } = ui.els;
   let roomListenersBound = false;
   let audioContext = null;
+  let sessionActive = false;
+  let audioLoopEpoch = 0;
   const remoteAudioEls = new Map();
 
   /* ─────────────────────────────────────────────────────────────
@@ -163,6 +165,7 @@ export function initLivekit({ room, ui }) {
 
     room.on(RoomEvent.TrackSubscribed, (track) => {
       if (track.kind !== Track.Kind.Audio) return;
+      const loopEpoch = audioLoopEpoch;
 
       const el = track.attach();
       el.autoplay = true;
@@ -194,6 +197,7 @@ export function initLivekit({ room, ui }) {
         let tmr;
 
         const chk = () => {
+          if (!sessionActive || loopEpoch !== audioLoopEpoch) return;
           an.getByteFrequencyData(d);
           const avg = d.reduce((a, b) => a + b, 0) / d.length;
 
@@ -220,7 +224,17 @@ export function initLivekit({ room, ui }) {
     });
 
     room.on(RoomEvent.LocalTrackPublished, (pub) => {
+      if (!sessionActive) return;
       if (pub.kind === Track.Kind.Audio) ui.setState('listening', 'MICROPHONE ACTIVE');
+    });
+
+    room.on(RoomEvent.Disconnected, () => {
+      sessionActive = false;
+      audioLoopEpoch++;
+      ui.showBtns('pre');
+      ui.setState('idle', 'SESSION TERMINATED');
+      btnStart.style.opacity = '1';
+      btnStart.style.pointerEvents = '';
     });
   }
 
@@ -243,6 +257,8 @@ export function initLivekit({ room, ui }) {
 
       bindRoomListeners();
 
+      sessionActive = true;
+      audioLoopEpoch++;
       await room.connect(serverUrl, token);
       await room.localParticipant.setMicrophoneEnabled(true);
 
@@ -251,6 +267,7 @@ export function initLivekit({ room, ui }) {
       ui.updMic();
 
     } catch (e) {
+      sessionActive = false;
       sTxt.textContent = 'CONNECTION FAILED: ' + (e?.message || e);
       btnStart.style.opacity = '1';
       btnStart.style.pointerEvents = '';
@@ -258,6 +275,8 @@ export function initLivekit({ room, ui }) {
   }
 
   function disconnect() {
+    sessionActive = false;
+    audioLoopEpoch++;
     room.disconnect();
     for (const el of remoteAudioEls.values()) {
       try { el.remove(); } catch {}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Yuki | Mridul Rao</title>
+  <title>Mridul Interface</title>
   <link rel="icon" href="data:,">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,19 +15,16 @@
 </head>
 <body>
 
-  <div class="corner tl"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-  <div class="corner br"></div>
   <canvas id="bg-canvas"></canvas>
+  <div class="art-lines" aria-hidden="true"></div>
 
   <!-- ─── Card stack: full-screen overlay, empty by default ─── -->
   <div id="card-stack"></div>
 
   <div class="ui">
     <div class="header">
-      <div class="header-title">YUKI</div>
-      <div class="header-sub">Mridul Rao (Voice Interface)</div>
+      <div class="header-title">MRIDUL</div>
+      <div class="header-sub">Voice Portfolio Interface</div>
     </div>
 
     <div class="orb-wrap">
@@ -47,9 +44,9 @@
     </div>
 
     <div class="controls">
-      <button class="btn prim" id="btn-start">⬡ CONNECT</button>
-      <button class="btn mic  hide" id="btn-mic">🔇 MUTE</button>
-      <button class="btn dng  hide" id="btn-disc">✕ TERMINATE</button>
+      <button class="btn prim" id="btn-start">CONNECT</button>
+      <button class="btn mic  hide" id="btn-mic">MUTE</button>
+      <button class="btn dng  hide" id="btn-disc">TERMINATE</button>
     </div>
   </div>
 
@@ -95,6 +92,18 @@
           <button class="btn prim" type="button" id="form-submit">⬡ SUBMIT</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="help-wrap" aria-live="polite">
+    <button class="help-btn" id="help-btn" type="button" aria-label="What this bot can do">i</button>
+    <div class="help-tip" role="note">
+      <div class="help-title">What this bot does</div>
+      <p>Voice guide for Mridul's work, background, and fit.</p>
+      <p>Ask things like:</p>
+      <p>"What does he build?"</p>
+      <p>"Show 2 relevant projects."</p>
+      <p>"How can I contact him?"</p>
     </div>
   </div>
 

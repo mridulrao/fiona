@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   padding: 18px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(20, 20, 24, 0.2);
   pointer-events: all;
 }
 
@@ -17,9 +17,9 @@
 
 .form-shell {
   width: min(560px, 94vw);
-  background: rgba(2,5,9,0.97);
-  border: 1px solid rgba(0,255,231,0.35);
-  box-shadow: 0 0 18px rgba(0,255,231,0.10);
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(20,20,20,0.2);
+  box-shadow: 0 14px 34px rgba(10,10,10,0.08);
   position: relative;
   overflow: hidden;
   clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
@@ -35,9 +35,9 @@
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    rgba(0,255,231,0.014) 2px,
-    rgba(0,255,231,0.014) 4px
+    transparent 10px,
+    rgba(20,20,20,0.016) 10px,
+    rgba(20,20,20,0.016) 11px
   );
 }
 
@@ -101,8 +101,8 @@
   width: 100%;
   padding: 13px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(20,20,20,0.16);
+  background: rgba(255,255,255,0.68);
   color: var(--text);
   outline: none;
   font-family: 'Share Tech Mono', monospace;
@@ -111,8 +111,8 @@
 }
 
 .form-input:focus {
-  border-color: rgba(0,255,231,0.45);
-  box-shadow: 0 0 0 2px rgba(0,255,231,0.08);
+  border-color: rgba(20,20,20,0.32);
+  box-shadow: 0 0 0 2px rgba(20,20,20,0.05);
 }
 
 .form-actions {

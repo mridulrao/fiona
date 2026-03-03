@@ -31,7 +31,7 @@ export function initUI({ room }) {
 
       bgX.beginPath();
       bgX.arc(p.x, p.y, p.sz, 0, Math.PI * 2);
-      bgX.fillStyle = `rgba(0,255,231,${p.a})`;
+      bgX.fillStyle = `rgba(22,22,24,${p.a * 0.45})`;
       bgX.fill();
     });
 
@@ -43,7 +43,7 @@ export function initUI({ room }) {
         bgX.beginPath();
         bgX.moveTo(pts[i].x, pts[i].y);
         bgX.lineTo(pts[j].x, pts[j].y);
-        bgX.strokeStyle = `rgba(0,255,231,${0.05 * (1 - d / 90)})`;
+        bgX.strokeStyle = `rgba(24,24,28,${0.08 * (1 - d / 90)})`;
         bgX.lineWidth = 0.5;
         bgX.stroke();
       }
@@ -76,7 +76,7 @@ export function initUI({ room }) {
     const ts = t * 0.0005;
     oX.beginPath();
     oX.arc(CX, CY, R, 0, Math.PI * 2);
-    oX.strokeStyle = 'rgba(0,255,231,.12)';
+    oX.strokeStyle = 'rgba(35,35,40,.24)';
     oX.lineWidth = 1;
     oX.stroke();
 
@@ -86,14 +86,14 @@ export function initUI({ room }) {
     oX.beginPath();
     oX.arc(0, 0, R * 0.88, 0, Math.PI * 2);
     oX.setLineDash([4, 12]);
-    oX.strokeStyle = 'rgba(0,255,231,.28)';
+    oX.strokeStyle = 'rgba(35,35,40,.2)';
     oX.lineWidth = 1;
     oX.stroke();
     oX.setLineDash([]);
     oX.restore();
 
     const g = oX.createRadialGradient(CX, CY, 0, CX, CY, R * 0.38);
-    g.addColorStop(0, 'rgba(0,255,231,.07)');
+    g.addColorStop(0, 'rgba(35,35,40,.08)');
     g.addColorStop(1, 'transparent');
     oX.beginPath();
     oX.arc(CX, CY, R * 0.38, 0, Math.PI * 2);
@@ -106,7 +106,7 @@ export function initUI({ room }) {
       oX.beginPath();
       oX.moveTo(CX + Math.cos(a) * R, CY + Math.sin(a) * R);
       oX.lineTo(CX + Math.cos(a) * (R - l), CY + Math.sin(a) * (R - l));
-      oX.strokeStyle = i % 6 === 0 ? 'rgba(0,255,231,.55)' : 'rgba(0,255,231,.18)';
+      oX.strokeStyle = i % 6 === 0 ? 'rgba(20,20,24,.4)' : 'rgba(35,35,40,.15)';
       oX.lineWidth = 1;
       oX.stroke();
     }
@@ -116,7 +116,7 @@ export function initUI({ room }) {
     const ts = t * 0.0003;
     oX.beginPath();
     oX.arc(CX, CY, R, 0, Math.PI * 2);
-    oX.strokeStyle = 'rgba(255,183,0,.14)';
+    oX.strokeStyle = 'rgba(90,90,96,.25)';
     oX.lineWidth = 1;
     oX.stroke();
 
@@ -126,7 +126,7 @@ export function initUI({ room }) {
     oX.beginPath();
     oX.arc(0, 0, R * 0.82, 0, Math.PI * 2);
     oX.setLineDash([3, 16]);
-    oX.strokeStyle = 'rgba(255,183,0,.22)';
+    oX.strokeStyle = 'rgba(90,90,96,.2)';
     oX.lineWidth = 1;
     oX.stroke();
     oX.setLineDash([]);
@@ -139,16 +139,16 @@ export function initUI({ room }) {
       const a = (Math.sin(i + t * 0.003) * 0.5 + 0.5) * 0.3;
       oX.beginPath();
       oX.arc(nx, ny, 1, 0, Math.PI * 2);
-      oX.fillStyle = `rgba(255,183,0,${a})`;
+      oX.fillStyle = `rgba(95,95,104,${a})`;
       oX.fill();
     }
 
     const s = R * 0.22;
     oX.save();
     oX.translate(CX, CY);
-    oX.strokeStyle = '#ffb700';
+    oX.strokeStyle = '#6f7076';
     oX.lineWidth = 2.5;
-    oX.shadowColor = '#ffb700';
+    oX.shadowColor = '#6f7076';
     oX.shadowBlur = 14;
     oX.beginPath(); oX.moveTo(-s, -s); oX.lineTo(s, s); oX.stroke();
     oX.beginPath(); oX.moveTo(s, -s); oX.lineTo(-s, s); oX.stroke();
@@ -160,7 +160,7 @@ export function initUI({ room }) {
     const ts = t * 0.002;
 
     const g = oX.createRadialGradient(CX, CY, R * 0.85, CX, CY, R * 1.15);
-    g.addColorStop(0, 'rgba(0,255,231,.1)');
+    g.addColorStop(0, 'rgba(30,30,35,.1)');
     g.addColorStop(1, 'transparent');
     oX.beginPath();
     oX.arc(CX, CY, R * 1.15, 0, Math.PI * 2);
@@ -179,15 +179,15 @@ export function initUI({ room }) {
       else oX.lineTo(CX + Math.cos(a) * r, CY + Math.sin(a) * r);
     }
     oX.closePath();
-    oX.strokeStyle = '#00ffe7';
+    oX.strokeStyle = '#202024';
     oX.lineWidth = 1.5;
-    oX.shadowColor = '#00ffe7';
+    oX.shadowColor = '#202024';
     oX.shadowBlur = 12;
     oX.stroke();
     oX.shadowBlur = 0;
 
     const ig = oX.createRadialGradient(CX, CY, 0, CX, CY, R * 0.78);
-    ig.addColorStop(0, 'rgba(0,255,231,.06)');
+    ig.addColorStop(0, 'rgba(30,30,35,.06)');
     ig.addColorStop(1, 'transparent');
     oX.fillStyle = ig;
     oX.fill();
@@ -196,8 +196,8 @@ export function initUI({ room }) {
     oX.translate(CX, CY);
     oX.rotate(ts * 2);
     const sg = oX.createLinearGradient(0, 0, R * 0.78, 0);
-    sg.addColorStop(0, 'rgba(0,255,231,.6)');
-    sg.addColorStop(1, 'rgba(0,255,231,0)');
+    sg.addColorStop(0, 'rgba(22,22,24,.55)');
+    sg.addColorStop(1, 'rgba(22,22,24,0)');
     oX.beginPath();
     oX.moveTo(0, 0);
     oX.lineTo(R * 0.78, 0);
@@ -224,7 +224,7 @@ export function initUI({ room }) {
         else oX.lineTo(CX + Math.cos(a) * r, CY + Math.sin(a) * r);
       }
       oX.closePath();
-      const c = ['#ff006e', '#00ffe7', '#ffb700'][l];
+      const c = ['#2f2f31', '#5b5c62', '#8a8b92'][l];
       oX.strokeStyle = c;
       oX.lineWidth = 2 - l * 0.5;
       oX.shadowColor = c;
@@ -246,7 +246,7 @@ export function initUI({ room }) {
       if (w > 0.6) {
         oX.beginPath();
         oX.arc(gx, gy, 1.5, 0, Math.PI * 2);
-        oX.fillStyle = `rgba(255,0,110,${w * 0.55})`;
+        oX.fillStyle = `rgba(42,42,48,${w * 0.35})`;
         oX.fill();
       }
     }
@@ -254,8 +254,8 @@ export function initUI({ room }) {
 
     const pulse = Math.sin(ts * 8) * 0.5 + 0.5;
     const cg = oX.createRadialGradient(CX, CY, 0, CX, CY, R * 0.35 + pulse * R * 0.1);
-    cg.addColorStop(0, `rgba(255,0,110,${0.26 + pulse * 0.18})`);
-    cg.addColorStop(0.5, `rgba(255,183,0,${0.07 + pulse * 0.08})`);
+    cg.addColorStop(0, `rgba(40,40,46,${0.24 + pulse * 0.16})`);
+    cg.addColorStop(0.5, `rgba(100,100,108,${0.08 + pulse * 0.08})`);
     cg.addColorStop(1, 'transparent');
 
     oX.beginPath();
@@ -363,7 +363,7 @@ export function initUI({ room }) {
   };
 
   const updMic = () => {
-    btnMic.innerHTML = room.localParticipant.isMicrophoneEnabled ? '🔇 MUTE' : '🎙 UNMUTE';
+    btnMic.textContent = room.localParticipant.isMicrophoneEnabled ? 'MUTE' : 'UNMUTE';
   };
 
   // Speaking animation ticker refresh (same behavior as original)
