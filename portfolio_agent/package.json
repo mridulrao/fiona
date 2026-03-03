@@ -7,7 +7,10 @@
   "scripts": {
     "build": "tsc",
     "download-files": "pnpm run build && node dist/agents/agent.js download-files",
-    "dev": "tsx ./agents/agent.ts dev"
+    "dev": "tsx ./agents/agent.ts dev",
+    "agent": "tsx ./agents/agent.ts dev",
+    "server": "node server.js",
+    "start:local": "concurrently -k \"pnpm run server\" \"pnpm run dev\""
   },
   "keywords": [],
   "author": "",

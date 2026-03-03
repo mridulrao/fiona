@@ -4,27 +4,39 @@ dotenv.config({ path: '.env.local' });
 import express from 'express';
 import { AccessToken } from 'livekit-server-sdk';
 import cors from 'cors';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const LIVEKIT_URL    = process.env.LIVEKIT_URL;
-const API_KEY        = process.env.LIVEKIT_API_KEY;
-const API_SECRET     = process.env.LIVEKIT_API_SECRET;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const LIVEKIT_URL = process.env.LIVEKIT_URL;
+const API_KEY = process.env.LIVEKIT_API_KEY;
+const API_SECRET = process.env.LIVEKIT_API_SECRET;
+const PORT = Number(process.env.PORT ?? 3001);
 
 console.log('LIVEKIT_URL:', LIVEKIT_URL);
 console.log('LIVEKIT_API_KEY set?', !!API_KEY);
 console.log('LIVEKIT_API_SECRET set?', !!API_SECRET);
 
+// Serve frontend directly from the same server.
+app.use(express.static(__dirname));
+
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // ── SSE: track connected browser clients ─────────────────────
 const sseClients = new Set();
 
-// Browser subscribes here
 app.get('/widgets', (req, res) => {
-  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('Connection', 'keep-alive');
   res.write('retry: 1000\n\n');
 
   sseClients.add(res);
@@ -36,7 +48,6 @@ app.get('/widgets', (req, res) => {
   });
 });
 
-// Node agent POSTs widget events here
 app.post('/widgets', (req, res) => {
   const msg = JSON.stringify(req.body);
   for (const client of sseClients) {
@@ -58,4 +69,4 @@ app.post('/token', async (req, res) => {
   res.json({ token, serverUrl: LIVEKIT_URL, roomName });
 });
 
-app.listen(3001, () => console.log('Token server on http://localhost:3001'));
+app.listen(PORT, () => console.log(`Web server on http://localhost:${PORT}`));

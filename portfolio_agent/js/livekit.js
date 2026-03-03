@@ -16,6 +16,7 @@ export function initLivekit({ room, ui }) {
   let sessionActive = false;
   let audioLoopEpoch = 0;
   const remoteAudioEls = new Map();
+  const apiBaseUrl = window.location.origin;
 
   /* ─────────────────────────────────────────────────────────────
      GET USER INPUT WIDGET (modal)
@@ -126,7 +127,7 @@ export function initLivekit({ room, ui }) {
   bc.onmessage = (e) => { if (e.data?.type === 'YUKI_WIDGET') dispatch(e.data); };
 
   /* ── SSE widgets feed ──────────────────────────────────────── */
-  const sse = new EventSource('http://localhost:3001/widgets');
+  const sse = new EventSource(`${apiBaseUrl}/widgets`);
   sse.onmessage = (e) => {
     try {
       const msg = JSON.parse(e.data);
@@ -249,7 +250,7 @@ export function initLivekit({ room, ui }) {
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
       if (audioContext.state === 'suspended') await audioContext.resume();
 
-      const { token, serverUrl, roomName } = await fetch('http://localhost:3001/token', {
+      const { token, serverUrl, roomName } = await fetch(`${apiBaseUrl}/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identity: 'user_' + Math.random().toString(36).slice(2, 6) })

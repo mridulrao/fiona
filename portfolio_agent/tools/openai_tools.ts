@@ -14,6 +14,8 @@ import OpenAI from 'openai';
  *   and only *added* optional fields (msg.contact, msg.url, msg.featured) that won’t break old UI.
  */
 
+const WIDGET_SERVER_BASE_URL = process.env.WIDGET_SERVER_BASE_URL ?? 'http://localhost:3001';
+
 // ── sendWidget ───────────────────────────────────────────────────────────────
 export function sendWidget(
   widget: string,
@@ -21,7 +23,7 @@ export function sendWidget(
 ): { status: string } {
   const msg = { type: 'YUKI_WIDGET', widget, ts: Date.now(), ...payload };
 
-  fetch('http://localhost:3001/widgets', {
+  fetch(`${WIDGET_SERVER_BASE_URL}/widgets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(msg),
