@@ -21,4 +21,5 @@ services:
       - WIDGET_SERVER_BASE_URL=http://web:3001
     depends_on:
       - web
+    network_mode: host
     restart: unless-stopped
