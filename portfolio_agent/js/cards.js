@@ -14,10 +14,17 @@ const ME = {
 const TTL     = 20000;
 const TTL_LNG = 24000;
 
-const CARD_W = 294;
-const CARD_H = 340;
+function getCardMetrics() {
+  const vw = innerWidth;
+  const vh = innerHeight;
+
+  const cardW = Math.min(440, Math.max(296, vw - 24));
+  const cardH = Math.min(560, Math.max(380, Math.round(vh * 0.58)));
+  return { cardW, cardH };
+}
 
 function getPlacementZones() {
+  const { cardW, cardH } = getCardMetrics();
   const vw = innerWidth, vh = innerHeight;
   const cx = vw / 2, cy = vh / 2;
   const safeR = Math.min(vw, vh) * 0.32;
@@ -28,9 +35,9 @@ function getPlacementZones() {
     { x: cx + safeR * 0.7, y: pad, w: vw - (cx + safeR * 0.7) - pad, h: cy - safeR * 0.7 - pad },
     { x: pad, y: cy + safeR * 0.7, w: cx - safeR * 0.7 - pad, h: vh - (cy + safeR * 0.7) - pad },
     { x: cx + safeR * 0.7, y: cy + safeR * 0.7, w: vw - (cx + safeR * 0.7) - pad, h: vh - (cy + safeR * 0.7) - pad },
-    { x: pad, y: cy - CARD_H / 2, w: cx - safeR * 0.85 - pad, h: CARD_H },
-    { x: cx + safeR * 0.85, y: cy - CARD_H / 2, w: vw - (cx + safeR * 0.85) - pad, h: CARD_H },
-  ].filter(z => z.w >= CARD_W * 0.7 && z.h >= 80);
+    { x: pad, y: cy - cardH / 2, w: cx - safeR * 0.85 - pad, h: cardH },
+    { x: cx + safeR * 0.85, y: cy - cardH / 2, w: vw - (cx + safeR * 0.85) - pad, h: cardH },
+  ].filter(z => z.w >= cardW * 0.7 && z.h >= 80);
 
   return zones;
 }
@@ -38,19 +45,20 @@ function getPlacementZones() {
 const placed = [];
 
 function randomPosition() {
+  const { cardW, cardH } = getCardMetrics();
   const zones = getPlacementZones();
   if (!zones.length) {
     return {
-      left: Math.random() * Math.max(innerWidth  - CARD_W - 32, 32) + 16,
-      top:  Math.random() * Math.max(innerHeight - CARD_H - 32, 32) + 16,
+      left: Math.random() * Math.max(innerWidth  - cardW - 32, 0) + 12,
+      top:  Math.random() * Math.max(innerHeight - cardH - 32, 0) + 12,
     };
   }
 
   const shuffled = zones.sort(() => Math.random() - 0.5);
 
   for (const zone of shuffled) {
-    const maxX = zone.x + zone.w - CARD_W;
-    const maxY = zone.y + zone.h - CARD_H;
+    const maxX = zone.x + zone.w - cardW;
+    const maxY = zone.y + zone.h - cardH;
     if (maxX < zone.x || maxY < zone.y) continue;
 
     for (let attempt = 0; attempt < 8; attempt++) {
@@ -60,9 +68,9 @@ function randomPosition() {
       const gap = 16;
       const overlaps = placed.some(r =>
         left < r.left + r.w + gap &&
-        left + CARD_W + gap > r.left &&
+        left + cardW + gap > r.left &&
         top  < r.top  + r.h + gap &&
-        top  + CARD_H + gap > r.top
+        top  + cardH + gap > r.top
       );
       if (!overlaps) return { left, top };
     }
@@ -70,8 +78,8 @@ function randomPosition() {
 
   const zone = shuffled[0];
   return {
-    left: Math.min(Math.max(zone.x, 16), innerWidth  - CARD_W - 16),
-    top:  Math.min(Math.max(zone.y, 16), innerHeight - CARD_H - 16),
+    left: Math.min(Math.max(zone.x, 12), innerWidth  - cardW - 12),
+    top:  Math.min(Math.max(zone.y, 12), innerHeight - cardH - 12),
   };
 }
 
@@ -86,11 +94,12 @@ function killCard(el) {
 }
 
 function makeCard({ id, color, ttl = TTL, typeLabel, bodyHTML }) {
+  const { cardW, cardH } = getCardMetrics();
   const old = stack.querySelector(`[data-id="${id}"]`);
   if (old) killCard(old);
 
   const { left, top } = randomPosition();
-  const rect = { left, top, w: CARD_W, h: CARD_H };
+  const rect = { left, top, w: cardW, h: cardH };
   placed.push(rect);
 
   const bobDur   = (3.2 + Math.random() * 2.4).toFixed(2) + 's';
@@ -103,6 +112,7 @@ function makeCard({ id, color, ttl = TTL, typeLabel, bodyHTML }) {
   el.style.cssText = `
     left: ${left}px;
     top:  ${top}px;
+    width: ${cardW}px;
     --cc:       ${color};
     --ttl:      ${ttl / 1000}s;
     --bob-dur:  ${bobDur};
@@ -141,7 +151,7 @@ export function cardAbout() {
         <img class="about-avatar" src="${ME.photo}" alt="${ME.name}"
           onerror="this.style.background='#0d1420'">
         <div>
-          <div class="c-title" style="font-size:.68rem">${ME.name}</div>
+          <div class="c-title">${ME.name}</div>
           <div class="c-sub" style="margin-bottom:0">${ME.role}</div>
         </div>
       </div>

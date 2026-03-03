@@ -11,6 +11,9 @@ import {
 
 export function initLivekit({ room, ui }) {
   const { btnStart, btnMic, btnDisc, sTxt } = ui.els;
+  let roomListenersBound = false;
+  let audioContext = null;
+  const remoteAudioEls = new Map();
 
   /* ─────────────────────────────────────────────────────────────
      GET USER INPUT WIDGET (modal)
@@ -149,6 +152,78 @@ export function initLivekit({ room, ui }) {
     }
   }
 
+  function bindRoomListeners() {
+    if (roomListenersBound) return;
+    roomListenersBound = true;
+
+    room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+      console.log('Data received:', { participant: participant?.identity, topic, kind });
+      onData(payload);
+    });
+
+    room.on(RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind !== Track.Kind.Audio) return;
+
+      const el = track.attach();
+      el.autoplay = true;
+      el.playsInline = true;
+      el.muted = false;
+      el.volume = 1;
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      remoteAudioEls.set(track.sid, el);
+
+      // Explicitly call play to avoid intermittent autoplay policy failures.
+      el.play().catch((err) => {
+        console.warn('[Audio] Autoplay blocked; waiting for next user gesture.', err);
+        sTxt.textContent = 'AUDIO BLOCKED BY BROWSER. CLICK CONNECT AGAIN.';
+      });
+
+      try {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+
+        const src = audioContext.createMediaStreamSource(
+          el.srcObject || new MediaStream([track.mediaStreamTrack])
+        );
+        const an = audioContext.createAnalyser();
+        an.fftSize = 256;
+        src.connect(an);
+
+        const d = new Uint8Array(an.frequencyBinCount);
+        let tmr;
+
+        const chk = () => {
+          an.getByteFrequencyData(d);
+          const avg = d.reduce((a, b) => a + b, 0) / d.length;
+
+          if (avg > 5 && ui.appState !== 'muted') {
+            clearTimeout(tmr);
+            if (ui.appState !== 'speaking') ui.setState('speaking', 'AGENT TRANSMITTING...');
+            tmr = setTimeout(() => {
+              if (ui.appState === 'speaking') ui.setState('listening', 'AWAITING INPUT...');
+            }, 600);
+          }
+          requestAnimationFrame(chk);
+        };
+
+        chk();
+      } catch {}
+    });
+
+    room.on(RoomEvent.TrackUnsubscribed, (track) => {
+      const el = remoteAudioEls.get(track.sid);
+      if (el) {
+        try { el.remove(); } catch {}
+        remoteAudioEls.delete(track.sid);
+      }
+    });
+
+    room.on(RoomEvent.LocalTrackPublished, (pub) => {
+      if (pub.kind === Track.Kind.Audio) ui.setState('listening', 'MICROPHONE ACTIVE');
+    });
+  }
+
   /* ── LiveKit connection ─────────────────────────────────────── */
   async function connect() {
     sTxt.textContent = 'ESTABLISHING CONNECTION...';
@@ -156,16 +231,17 @@ export function initLivekit({ room, ui }) {
     btnStart.style.pointerEvents = 'none';
 
     try {
+      // Prime AudioContext on user gesture to improve playback reliability.
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContext.state === 'suspended') await audioContext.resume();
+
       const { token, serverUrl, roomName } = await fetch('http://localhost:3001/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identity: 'user_' + Math.random().toString(36).slice(2, 6) })
       }).then(r => r.json());
 
-      room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
-        console.log('Data received:', { participant: participant?.identity, topic, kind });
-        onData(payload);
-      });
+      bindRoomListeners();
 
       await room.connect(serverUrl, token);
       await room.localParticipant.setMicrophoneEnabled(true);
@@ -173,45 +249,6 @@ export function initLivekit({ room, ui }) {
       ui.showBtns('post');
       ui.setState('connected', `ROOM: ${roomName}`);
       ui.updMic();
-
-      room.on(RoomEvent.TrackSubscribed, (track) => {
-        if (track.kind !== Track.Kind.Audio) return;
-
-        const el = track.attach();
-        el.style.display = 'none';
-        document.body.appendChild(el);
-
-        try {
-          const aC  = new (window.AudioContext || window.webkitAudioContext)();
-          const src = aC.createMediaStreamSource(el.srcObject || new MediaStream([track.mediaStreamTrack]));
-          const an  = aC.createAnalyser();
-          an.fftSize = 256;
-          src.connect(an);
-
-          const d = new Uint8Array(an.frequencyBinCount);
-          let tmr;
-
-          const chk = () => {
-            an.getByteFrequencyData(d);
-            const avg = d.reduce((a, b) => a + b, 0) / d.length;
-
-            if (avg > 5 && ui.appState !== 'muted') {
-              clearTimeout(tmr);
-              if (ui.appState !== 'speaking') ui.setState('speaking', 'AGENT TRANSMITTING...');
-              tmr = setTimeout(() => {
-                if (ui.appState === 'speaking') ui.setState('listening', 'AWAITING INPUT...');
-              }, 600);
-            }
-            requestAnimationFrame(chk);
-          };
-
-          chk();
-        } catch (e) {}
-      });
-
-      room.on(RoomEvent.LocalTrackPublished, (pub) => {
-        if (pub.kind === Track.Kind.Audio) ui.setState('listening', 'MICROPHONE ACTIVE');
-      });
 
     } catch (e) {
       sTxt.textContent = 'CONNECTION FAILED: ' + (e?.message || e);
@@ -222,6 +259,10 @@ export function initLivekit({ room, ui }) {
 
   function disconnect() {
     room.disconnect();
+    for (const el of remoteAudioEls.values()) {
+      try { el.remove(); } catch {}
+    }
+    remoteAudioEls.clear();
     ui.showBtns('pre');
     ui.setState('idle', 'SESSION TERMINATED');
     btnStart.style.opacity = '1';

@@ -68,23 +68,23 @@ export default defineAgent({
         sampleRate: 16000,
         numChannels: 1,
 
-        //keywords: [["livekit", 2.0], ["elevenlabs", 2.5]],
-        //keyterm: ["Mridul", "Groq", "Llama"],
+        //keywords: [["Mridul", 2.0]],
+        keyterm: ["Mridul", "Yuki"],
         mipOptOut: false,
       });   
       const llm = new openai.LLM({  
-        baseURL: 'https://api.groq.com/openai/v1',  
-        apiKey: process.env.GROQ_API_KEY,  
-        model: 'openai/gpt-oss-20b',  
+        //baseURL: 'https://api.groq.com/openai/v1',  
+        //apiKey: process.env.GROQ_API_KEY,  
+        model: 'gpt-5.1-2025-11-13',  
       });   
       const tts = new elevenlabs.TTS({  
-        voiceId: "mActWQg9kibLro6Z2ouY",  
+        voiceId: "54Cze5LrTSyLgbO6Fhlc",  
         model: "eleven_flash_v2_5" ,
         voiceSettings: {
           stability: 0.5,
           similarity_boost: 0.55,
           style: 0.3,
-          speed: 1.0,
+          speed: 1.1,
           use_speaker_boost: true,
         }, 
       });  

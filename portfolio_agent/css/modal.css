@@ -16,13 +16,14 @@
 #form-modal.on { display: flex; }
 
 .form-shell {
-  width: min(440px, 92vw);
+  width: min(560px, 94vw);
   background: rgba(2,5,9,0.97);
   border: 1px solid rgba(0,255,231,0.35);
   box-shadow: 0 0 18px rgba(0,255,231,0.10);
   position: relative;
   overflow: hidden;
   clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+  font-size: clamp(14px, 1.05vw, 17px);
 }
 
 .form-shell::before {
@@ -43,7 +44,7 @@
 .form-bar { height: 2px; background: linear-gradient(90deg, var(--cyan), transparent 75%); }
 
 .form-head {
-  padding: 12px 14px 8px;
+  padding: 16px 18px 10px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -53,8 +54,8 @@
 .form-title {
   font-family: 'Orbitron', sans-serif;
   font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-size: 1.04rem;
+  letter-spacing: 0.1em;
   color: var(--cyan);
   text-shadow: 0 0 10px var(--cyan-glow);
 }
@@ -64,49 +65,49 @@
   border: none;
   cursor: pointer;
   color: var(--text-dim);
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-family: 'Share Tech Mono', monospace;
   padding: 0 4px;
   z-index: 5;
 }
 .form-x:hover { color: var(--magenta); }
 
-.form-body { padding: 0 14px 14px; position: relative; z-index: 4; }
+.form-body { padding: 0 18px 18px; position: relative; z-index: 4; }
 
 .form-prompt {
-  font-size: 0.48rem;
-  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
   color: var(--text-dim);
-  line-height: 1.8;
-  margin-bottom: 12px;
+  line-height: 1.6;
+  margin-bottom: 14px;
 }
 
-.form-row { margin-bottom: 10px; }
+.form-row { margin-bottom: 12px; }
 
 .form-label {
-  font-size: 0.40rem;
-  letter-spacing: 0.28em;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.form-req { color: var(--amber); letter-spacing: 0.22em; font-size: 0.34rem; }
+.form-req { color: var(--amber); letter-spacing: 0.14em; font-size: 0.54rem; }
 
 .form-input {
   width: 100%;
-  padding: 10px 10px;
+  padding: 13px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.02);
   color: var(--text);
   outline: none;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.56rem;
-  letter-spacing: 0.08em;
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
 }
 
 .form-input:focus {
@@ -115,8 +116,19 @@
 }
 
 .form-actions {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .form-shell { width: min(96vw, 560px); }
+  .form-head { padding: 14px 14px 10px; }
+  .form-body { padding: 0 14px 14px; }
+  .form-title { font-size: 0.94rem; }
+  .form-prompt { font-size: 0.72rem; }
+  .form-label { font-size: 0.58rem; }
+  .form-req { font-size: 0.5rem; }
+  .form-input { font-size: 0.82rem; padding: 12px 10px; }
 }
