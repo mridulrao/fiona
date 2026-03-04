@@ -217,3 +217,10 @@ portfolio_agent/pnpm-lock.yaml
 
 # google creds
 inbound_agent/google_creds.json
+
+#portfolio_animation
+portfolio_animation/three-scene/node_modules/*
+#portfolio_agent
+portfolio_agent/node_modules/*
+#root folder
+node_modules/*
