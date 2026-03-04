@@ -1,5 +1,5 @@
 {$DOMAIN} {
   tls {$ACME_EMAIL}
   encode zstd gzip
-  reverse_proxy web:3001
+  reverse_proxy localhost:3001
 }

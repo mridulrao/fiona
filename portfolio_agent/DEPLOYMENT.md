@@ -6,6 +6,10 @@ This setup runs your app as **three services**:
 2. `agent`: `pnpm run dev` (LiveKit worker)
 3. `caddy`: reverse proxy + automatic TLS certs (Let's Encrypt)
 
+Notes for current compose:
+- Services run with `network_mode: host` (Linux/EC2 host network).
+- `agent` startup runs `pnpm run download-files` before `pnpm run dev`.
+
 ## 1) Prepare env file
 
 Create `.env.local` in the project root (or copy from `.env.example`) and fill in real values.

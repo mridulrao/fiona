@@ -4,8 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: pnpm run server
-    expose:
-      - "3001"
+    network_mode: host
     env_file:
       - .env.local
     restart: unless-stopped
@@ -14,22 +13,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: pnpm run dev
+    command: sh -c "pnpm run download-files && pnpm run dev"
+    network_mode: host
     env_file:
       - .env.local
     environment:
-      - WIDGET_SERVER_BASE_URL=http://web:3001
+      - WIDGET_SERVER_BASE_URL=http://localhost:3001
     depends_on:
       - web
     restart: unless-stopped
 
   caddy:
     image: caddy:2.8-alpine
+    network_mode: host
     env_file:
       - .env.local
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
