@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "download-files": "pnpm run build && node dist/agents/agent.js download-files",
+    "download-files": "tsc && node dist/agents/agent.js download-files",
     "dev": "tsx ./agents/agent.ts dev",
     "agent": "tsx ./agents/agent.ts dev",
     "server": "node server.js",
@@ -20,6 +20,7 @@
     "@livekit/agents": "^1.0.44",
     "@livekit/agents-plugin-deepgram": "^1.0.44",
     "@livekit/agents-plugin-elevenlabs": "^1.0.44",
+    "@livekit/agents-plugin-livekit": "^1.0.48",
     "@livekit/agents-plugin-openai": "^1.0.44",
     "@livekit/agents-plugin-silero": "^1.0.44",
     "@livekit/noise-cancellation-node": "^0.1.9",

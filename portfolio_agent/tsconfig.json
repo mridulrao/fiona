@@ -3,6 +3,7 @@
     "target": "es2022",  
     "module": "node16",  
     "moduleResolution": "node16",  
+    "allowJs": true,
     "outDir": "./dist",  
     "rootDir": "./",  
     "strict": true,  
@@ -11,6 +12,6 @@
     "forceConsistentCasingInFileNames": true,  
     "types": ["node"]  
   },  
-  "include": ["agents/agent.ts"],  
+  "include": ["agents/agent.ts", "types/**/*.d.ts"],  
   "exclude": ["node_modules", "dist"]  
 }

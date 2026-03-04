@@ -1,6 +1,7 @@
 import { defineAgent, JobContext, WorkerOptions, voice, metrics } from '@livekit/agents';  
 import * as deepgram from '@livekit/agents-plugin-deepgram';  
 import * as elevenlabs from '@livekit/agents-plugin-elevenlabs';  
+import * as livekit from '@livekit/agents-plugin-livekit';
 import * as openai from '@livekit/agents-plugin-openai';  
 import * as silero from '@livekit/agents-plugin-silero';  
 import { BackgroundVoiceCancellation } from '@livekit/noise-cancellation-node';  
@@ -11,8 +12,43 @@ import { cli } from '@livekit/agents';
 import { INSTRUCTIONS } from '../instructions/prompt.js';  
 import { handleUserInput, clearChatHistory } from '../agents/background_agent.js';
 import { getUserInput } from '../tools/livekit_tools.js'; 
+import { BackchannelController } from './backchannel.js';
 
 dotenv.config({ path: '.env.local' });  
+
+type WorkerUserData = {
+  vad?: silero.VAD;
+};
+
+function readPositiveInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function readBool(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const normalized = raw.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+async function loadTurnDetectionModel(): Promise<unknown> {
+  try {
+    const model = new livekit.turnDetector.MultilingualModel();
+    await model.supportsLanguage('en');
+    return model;
+  } catch (error) {
+    console.warn(
+      'Turn detector unavailable or model assets missing. Falling back to turnDetection="stt". Run `pnpm run download-files` with internet access to enable model-based endpointing.',
+      error,
+    );
+    return 'stt';
+  }
+}
   
 // Validate required environment variables  
 const requiredEnvVars = ['GROQ_API_KEY', 'DEEPGRAM_API_KEY', 'ELEVEN_API_KEY'];  
@@ -37,7 +73,9 @@ class Assistant extends voice.Agent {
 export default defineAgent({  
   prewarm: async (proc) => {  
     try {  
-      proc.userData.vad = await silero.VAD.load();  
+      const vad = await silero.VAD.load();
+      const userData = proc.userData as WorkerUserData;
+      userData.vad = vad;
     } catch (error) {  
       console.error('Failed to load VAD:', error);  
       throw error;  
@@ -45,7 +83,13 @@ export default defineAgent({
   },  
   entry: async (ctx: JobContext) => {    
   
-    let session: voice.AgentSession;  
+    let session: voice.AgentSession;
+    let backchannel: BackchannelController | undefined;
+    const sttEndpointingMs = readPositiveInt('DEEPGRAM_ENDPOINTING_MS', 700);
+    const sttNoDelay = readBool('DEEPGRAM_NO_DELAY', false);
+    const minEndpointingDelayMs = readPositiveInt('LK_MIN_ENDPOINTING_DELAY_MS', 1400);
+    const maxEndpointingDelayMs = readPositiveInt('LK_MAX_ENDPOINTING_DELAY_MS', 6000);
+    const backchannelAllowInterruptions = readBool('BACKCHANNEL_ALLOW_INTERRUPTION', false);
   
     try {  
       const stt = new deepgram.STT({
@@ -60,8 +104,8 @@ export default defineAgent({
         profanityFilter: false,
         fillerWords: false,
 
-        noDelay: true,
-        endpointing: 25,
+        noDelay: sttNoDelay,
+        endpointing: sttEndpointingMs,
         dictation: false,
         diarize: false,
 
@@ -91,11 +135,22 @@ export default defineAgent({
 
       await ctx.connect();
 
+      const turnDetection = await loadTurnDetectionModel();
+      console.log(
+        `Turn detection mode: ${typeof turnDetection === 'string' ? turnDetection : 'model'} | STT endpointing=${sttEndpointingMs}ms | noDelay=${sttNoDelay} | endpoint window=${minEndpointingDelayMs}-${maxEndpointingDelayMs}ms | backchannelInterruptible=${backchannelAllowInterruptions}`,
+      );
+
       session = new voice.AgentSession({  
-        vad: ctx.proc.userData.vad! as silero.VAD,  
+        vad: (ctx.proc.userData as WorkerUserData).vad! as silero.VAD,
+        turnDetection: turnDetection as any,
         stt,  
         llm,  
         tts,  
+        voiceOptions: {
+          // Keep a short lower bound for responsiveness; turn detector can extend to max when continuation is likely.
+          minEndpointingDelay: minEndpointingDelayMs,
+          maxEndpointingDelay: maxEndpointingDelayMs,
+        },
       });  
 
       await session.start({  
@@ -106,13 +161,24 @@ export default defineAgent({
         },  
       });    
 
+      backchannel = new BackchannelController({
+        say: (text: string) =>
+          session.say(text, {
+            allowInterruptions: backchannelAllowInterruptions,
+            addToChatCtx: false,
+          }),
+        logger: (message: string) => console.log(message),
+      });
+
       // ── User transcript ──────────────────────────────────────────────
-      session.on('user_input_transcribed', async (event: any) => {  
+      session.on(voice.AgentSessionEventTypes.UserInputTranscribed, async (event: any) => {  
+        backchannel?.onTranscript(event);
+
         if (event.isFinal) {  
           const text = event.transcript;  
           console.log('User:', text);  
           await handleUserInput(text);  
-          if (text) {  
+          if (text && ctx.room.localParticipant) {  
             ctx.room.localParticipant.publishData(  
               Buffer.from(JSON.stringify({ type: 'TRANSCRIPT', role: 'user', text })),  
               { reliable: true }  
@@ -122,11 +188,11 @@ export default defineAgent({
       });
 
       // ── Agent transcript ─────────────────────────────────────────────
-      session.on('conversation_item_added', (event: any) => {
+      session.on(voice.AgentSessionEventTypes.ConversationItemAdded, (event: any) => {
         if (event.item.type === 'message') {
           const text: string = event.item.content;
           console.log('Agent:', text);
-          if (text) {
+          if (text && ctx.room.localParticipant) {
             ctx.room.localParticipant.publishData(
               Buffer.from(JSON.stringify({ type: 'TRANSCRIPT', role: 'assistant', text })),
               { reliable: true }
@@ -140,6 +206,7 @@ export default defineAgent({
     } catch (error) {  
       console.error('Error in agent entry:', error);  
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');  
+      backchannel?.dispose();
       throw error;  
     }  
   },  

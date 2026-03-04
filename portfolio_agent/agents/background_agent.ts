@@ -52,6 +52,10 @@ async function chat(
     chatHistory.push(message);
 
     for (const call of message.tool_calls) {
+      if (call.type !== 'function') {
+        continue;
+      }
+
       const name = call.function.name as ToolName;
       const args = JSON.parse(call.function.arguments) as Record<string, unknown>;
 

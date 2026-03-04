@@ -1,0 +1,5 @@
+{
+	"dependencies": {
+		"@livekit/agents-plugin-livekit": "^1.0.48"
+	}
+}
