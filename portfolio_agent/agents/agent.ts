@@ -11,7 +11,7 @@ import { cli } from '@livekit/agents';
   
 import { INSTRUCTIONS } from '../instructions/prompt.js';  
 import { handleUserInput, clearChatHistory } from '../agents/background_agent.js';
-import { getUserInput } from '../tools/livekit_tools.js'; 
+import { getUserInput, verifyShortLivedMemoryPin, storeShortLivedMemory, queryShortLivedMemory } from '../tools/livekit_tools.js'; 
 import { BackchannelController } from './backchannel.js';
 
 dotenv.config({ path: '.env.local' });  
@@ -64,7 +64,10 @@ class Assistant extends voice.Agent {
     super({  
       instructions: INSTRUCTIONS,  
       tools: {
-        getUserInput
+        getUserInput,
+        verifyShortLivedMemoryPin,
+        storeShortLivedMemory,
+        queryShortLivedMemory,
       }
     });  
   }  

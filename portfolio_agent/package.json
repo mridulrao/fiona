@@ -10,7 +10,8 @@
     "dev": "tsx ./agents/agent.ts dev",
     "agent": "tsx ./agents/agent.ts dev",
     "server": "node server.js",
-    "start:local": "concurrently -k \"pnpm run server\" \"pnpm run dev\""
+    "start:local": "concurrently -k \"pnpm run server\" \"pnpm run dev\"",
+    "start:prod": "concurrently -k \"pnpm run server\" \"pnpm run start\""
   },
   "keywords": [],
   "author": "",
