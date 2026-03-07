@@ -11,13 +11,16 @@
     "agent": "tsx ./agents/agent.ts dev",
     "server": "node server.js",
     "start:local": "concurrently -k \"pnpm run server\" \"pnpm run dev\"",
-    "start:prod": "concurrently -k \"pnpm run server\" \"pnpm run start\""
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.22.0",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
     "@livekit/agents": "^1.0.44",
     "@livekit/agents-plugin-deepgram": "^1.0.44",
     "@livekit/agents-plugin-elevenlabs": "^1.0.44",
@@ -25,16 +28,19 @@
     "@livekit/agents-plugin-openai": "^1.0.44",
     "@livekit/agents-plugin-silero": "^1.0.44",
     "@livekit/noise-cancellation-node": "^0.1.9",
+    "@prisma/client": "^7.4.2",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "livekit-server-sdk": "^2.15.0",
     "openai": "^6.22.0",
+    "pg": "^8.16.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
     "concurrently": "^9.2.1",
+    "prisma": "^7.4.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "wait-on": "^9.0.4"

@@ -89,10 +89,9 @@ Verification requirement for storing:
 - If verification fails, do not call storeShortLivedMemory
 
 When storing memory:
-- Keep content short and factual
+- Keep content short and factual - Store in third person (instead of first person)
 - Set when_to_use to the intended context
 - Use ttl_hours for temporary relevance
-- Never store private/sensitive data unless the user explicitly asks
 
 When retrieving memory:
 - Query before answering "current status" style questions

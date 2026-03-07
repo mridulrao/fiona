@@ -20,13 +20,12 @@ type BackchannelDeps = {
 };
 
 const DEFAULT_FILLERS = [
-  'Ah, I see...',      // Realization
-  'Mm, yeah...',       // Warm agreement
-  'I hear you...',     // Empathy
-  'Totally...',        // Informal connection
-  'Right, right...',   // Attentive nodding
-  'Oh, interesting...',// Curiosity
-  'I’m with you...'    // Active partnership
+  'I see...',
+  'Mm, yeah...',
+  'Right...',
+  'Hmm...',
+  'Okay...',
+  'Alright...',
 ];
 
 const DEFAULT_CONFIG: BackchannelConfig = {

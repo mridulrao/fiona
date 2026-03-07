@@ -1,0 +1,217 @@
+:root {
+  --bg: #f2f3f5;
+  --surface: rgba(255, 255, 255, 0.84);
+  --surface-soft: rgba(255, 255, 255, 0.62);
+  --ink: #1b1b1e;
+  --muted: #6d7079;
+  --line: rgba(20, 20, 20, 0.16);
+  --line-strong: rgba(20, 20, 20, 0.24);
+  --accent: #232428;
+  --danger: #5a2020;
+  --success: #1f4731;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--ink);
+  font-family: 'Share Tech Mono', monospace;
+  background:
+    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 86% 8%, rgba(210, 214, 221, 0.55) 0%, rgba(210, 214, 221, 0) 40%),
+    radial-gradient(circle at 72% 78%, rgba(220, 222, 227, 0.5) 0%, rgba(220, 222, 227, 0) 45%),
+    var(--bg);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    120deg,
+    transparent,
+    transparent 10px,
+    rgba(15, 15, 15, 0.03) 10px,
+    rgba(15, 15, 15, 0.03) 11px
+  );
+  opacity: 0.4;
+}
+
+.page {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--accent);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+button:hover {
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(10, 10, 10, 0.06);
+}
+
+.stat-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: end;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.filters input,
+.filters select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+}
+
+.events {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: auto;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 22px rgba(10, 10, 10, 0.06);
+}
+
+.events h2 {
+  margin: 0;
+  padding: 12px 12px 0;
+  font-size: 14px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+  font-size: 12px;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid rgba(20, 20, 20, 0.1);
+  padding: 10px;
+  vertical-align: top;
+}
+
+tbody tr[data-session-id] {
+  cursor: pointer;
+}
+
+tbody tr[data-session-id]:hover {
+  background: rgba(255, 255, 255, 0.66);
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: rgba(248, 249, 251, 0.95);
+  backdrop-filter: blur(6px);
+}
+
+.status-success {
+  color: var(--success);
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+.payload {
+  max-width: 360px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #4b5563;
+}

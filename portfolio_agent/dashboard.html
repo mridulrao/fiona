@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YUKI observability</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <h1>YUKI observability</h1>
+      </div>
+      <div class="header-actions">
+        <button id="refresh-btn" type="button">Refresh</button>
+        <label class="auto-refresh">
+          <input id="auto-refresh" type="checkbox" checked>
+          Auto refresh
+        </label>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>Total Sessions</span>
+        <strong id="stat-total-sessions">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Sessions (Last Hour)</span>
+        <strong id="stat-sessions-last-hour">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Total Turns</span>
+        <strong id="stat-total-turns">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Tool Success Rate</span>
+        <strong id="stat-tool-success-rate">0%</strong>
+      </article>
+      <article class="stat-card">
+        <span>Avg Session Duration</span>
+        <strong id="stat-session-avg">0 ms</strong>
+      </article>
+      <article class="stat-card">
+        <span>P95 Session Duration</span>
+        <strong id="stat-session-p95">0 ms</strong>
+      </article>
+    </section>
+
+    <section class="filters">
+      <label>
+        Source
+        <select id="filter-source">
+          <option value="">All</option>
+          <option value="agent">agent</option>
+          <option value="tool">tool</option>
+        </select>
+      </label>
+      <label>
+        Event Type
+        <input id="filter-event-type" type="text" placeholder="metrics_collected">
+      </label>
+      <label>
+        Tool Name
+        <input id="filter-tool-name" type="text" placeholder="getUserInput">
+      </label>
+      <label>
+        Status
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="success">success</option>
+          <option value="error">error</option>
+        </select>
+      </label>
+      <label>
+        Since
+        <input id="filter-since" type="datetime-local">
+      </label>
+      <button id="apply-filters" type="button">Apply</button>
+    </section>
+
+    <section class="events">
+      <h2>Sessions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th>Updated</th>
+            <th>Room</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Turns</th>
+            <th>Tool Calls</th>
+            <th>Tool Errors</th>
+            <th>Duration</th>
+            <th>Usage Summary</th>
+            <th>Tool Breakdown</th>
+          </tr>
+        </thead>
+        <tbody id="events-body"></tbody>
+      </table>
+    </section>
+
+    <section class="events">
+      <h2>Selected Session Turns</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Tool</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Payload</th>
+          </tr>
+        </thead>
+        <tbody id="turns-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="./js/dashboard.js"></script>
+</body>
+</html>

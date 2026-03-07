@@ -36,6 +36,48 @@ function readBool(name: string, fallback: boolean): boolean {
   return fallback;
 }
 
+function formatUsageSummary(summary: metrics.UsageSummary): string {
+  const sttAudioSeconds = Math.round(summary.sttAudioDurationMs / 10) / 100;
+  return [
+    `llmPromptTokens=${summary.llmPromptTokens}`,
+    `llmPromptCachedTokens=${summary.llmPromptCachedTokens}`,
+    `llmCompletionTokens=${summary.llmCompletionTokens}`,
+    `ttsCharacters=${summary.ttsCharactersCount}`,
+    `sttAudioSeconds=${sttAudioSeconds}`,
+  ].join(' ');
+}
+
+const OBSERVABILITY_API_BASE_URL =
+  process.env.OBSERVABILITY_API_BASE_URL ??
+  process.env.WIDGET_SERVER_BASE_URL ??
+  'http://localhost:3001';
+const OBSERVABILITY_INGEST_KEY = process.env.OBSERVABILITY_INGEST_KEY ?? '';
+const LK_DB_OBSERVABILITY_ENABLED = readBool('LK_DB_OBSERVABILITY_ENABLED', true);
+
+async function emitDbObservabilityEvent(event: Record<string, unknown>): Promise<void> {
+  if (!LK_DB_OBSERVABILITY_ENABLED) return;
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (OBSERVABILITY_INGEST_KEY) {
+      headers['x-observability-key'] = OBSERVABILITY_INGEST_KEY;
+    }
+
+    await fetch(`${OBSERVABILITY_API_BASE_URL}/observability/events`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(event),
+    });
+  } catch (error) {
+    console.warn(
+      '[observability-db] failed to emit agent event:',
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+}
+
 async function loadTurnDetectionModel(): Promise<unknown> {
   try {
     const model = new livekit.turnDetector.MultilingualModel();
@@ -93,6 +135,12 @@ export default defineAgent({
     const minEndpointingDelayMs = readPositiveInt('LK_MIN_ENDPOINTING_DELAY_MS', 1400);
     const maxEndpointingDelayMs = readPositiveInt('LK_MAX_ENDPOINTING_DELAY_MS', 6000);
     const backchannelAllowInterruptions = readBool('BACKCHANNEL_ALLOW_INTERRUPTION', false);
+    const recordInsights = readBool('LK_AGENT_RECORD', true);
+    const logSdkMetrics = readBool('LK_LOG_SDK_METRICS', true);
+    const usageCollector = new metrics.UsageCollector();
+    const sessionStartedAt = Date.now();
+    const sessionId = String((ctx as any)?.job?.id ?? `${ctx.room.name}_${sessionStartedAt}`);
+    const roomName = String(ctx.room.name ?? 'unknown_room');
   
     try {  
       const stt = new deepgram.STT({
@@ -140,7 +188,7 @@ export default defineAgent({
 
       const turnDetection = await loadTurnDetectionModel();
       console.log(
-        `Turn detection mode: ${typeof turnDetection === 'string' ? turnDetection : 'model'} | STT endpointing=${sttEndpointingMs}ms | noDelay=${sttNoDelay} | endpoint window=${minEndpointingDelayMs}-${maxEndpointingDelayMs}ms | backchannelInterruptible=${backchannelAllowInterruptions}`,
+        `Turn detection mode: ${typeof turnDetection === 'string' ? turnDetection : 'model'} | STT endpointing=${sttEndpointingMs}ms | noDelay=${sttNoDelay} | endpoint window=${minEndpointingDelayMs}-${maxEndpointingDelayMs}ms | backchannelInterruptible=${backchannelAllowInterruptions} | insightsRecord=${recordInsights} | logSdkMetrics=${logSdkMetrics}`,
       );
 
       session = new voice.AgentSession({  
@@ -162,7 +210,95 @@ export default defineAgent({
         inputOptions: {  
           noiseCancellation: BackgroundVoiceCancellation(),  
         },  
+        record: recordInsights,
       });    
+
+      void emitDbObservabilityEvent({
+        source: 'agent',
+        eventType: 'session_started',
+        status: 'success',
+        sessionId,
+        roomName,
+        payload: {
+          turnDetectionMode: typeof turnDetection === 'string' ? turnDetection : 'model',
+          sttEndpointingMs,
+          sttNoDelay,
+          minEndpointingDelayMs,
+          maxEndpointingDelayMs,
+          recordInsights,
+          logSdkMetrics,
+        },
+      });
+
+      session.on(voice.AgentSessionEventTypes.MetricsCollected, (event: any) => {
+        usageCollector.collect(event.metrics);
+        if (logSdkMetrics) {
+          metrics.logMetrics(event.metrics);
+        }
+        void emitDbObservabilityEvent({
+          source: 'agent',
+          eventType: 'metrics_collected',
+          sessionId,
+          roomName,
+          payload: {
+            metricType: event?.metrics?.type ?? 'unknown',
+            metrics: event?.metrics ?? {},
+          },
+        });
+      });
+
+      session.on(voice.AgentSessionEventTypes.FunctionToolsExecuted, (event: any) => {
+        const callNames = Array.isArray(event.functionCalls)
+          ? event.functionCalls.map((call: any) => call?.name).filter(Boolean)
+          : [];
+        console.log(
+          `Tool execution batch count=${callNames.length} names=${callNames.join(',') || 'none'}`,
+        );
+        void emitDbObservabilityEvent({
+          source: 'agent',
+          eventType: 'function_tools_executed',
+          sessionId,
+          roomName,
+          payload: {
+            count: callNames.length,
+            names: callNames,
+          },
+        });
+      });
+
+      session.on(voice.AgentSessionEventTypes.Error, (event: any) => {
+        console.error('Agent session error event:', event.error);
+        void emitDbObservabilityEvent({
+          source: 'agent',
+          eventType: 'session_error',
+          status: 'error',
+          sessionId,
+          roomName,
+          payload: {
+            error: event?.error instanceof Error ? event.error.message : String(event?.error ?? 'Unknown error'),
+          },
+        });
+      });
+
+      session.on(voice.AgentSessionEventTypes.Close, (event: any) => {
+        const sessionDurationMs = Date.now() - sessionStartedAt;
+        const summary = usageCollector.getSummary();
+        console.log(
+          `Agent session closed reason=${event.reason} durationMs=${sessionDurationMs} ${formatUsageSummary(summary)}`,
+        );
+        void emitDbObservabilityEvent({
+          source: 'agent',
+          eventType: 'session_closed',
+          status: event?.reason === 'error' ? 'error' : 'success',
+          sessionId,
+          roomName,
+          durationMs: sessionDurationMs,
+          payload: {
+            reason: event?.reason ?? 'unknown',
+            usageSummary: summary,
+          },
+        });
+      });
 
       backchannel = new BackchannelController({
         say: (text: string) =>

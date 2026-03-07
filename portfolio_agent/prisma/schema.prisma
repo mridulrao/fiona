@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AgentObservabilityEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  source     String
+  eventType  String   @map("event_type")
+  toolName   String?  @map("tool_name")
+  status     String?
+  sessionId  String?  @map("session_id")
+  roomName   String?  @map("room_name")
+  durationMs Int?     @map("duration_ms")
+  payload    Json
+
+  @@index([createdAt], map: "idx_agent_obs_created_at")
+  @@index([source, eventType], map: "idx_agent_obs_source_event_type")
+  @@index([toolName, status], map: "idx_agent_obs_tool_status")
+  @@map("agent_observability_events")
+}
+
+model AgentObservabilitySession {
+  sessionId  String    @id @map("session_id")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  roomName   String?   @map("room_name")
+  source     String?
+  startedAt  DateTime? @map("started_at") @db.Timestamptz(6)
+  endedAt    DateTime? @map("ended_at") @db.Timestamptz(6)
+  status     String?
+  eventCount Int       @default(0) @map("event_count")
+  toolCalls  Int       @default(0) @map("tool_calls")
+  toolErrors Int       @default(0) @map("tool_errors")
+  metricsCount Int     @default(0) @map("metrics_count")
+  durationMs Int?      @map("duration_ms")
+  summary    Json
+  turns      Json
+
+  @@index([updatedAt], map: "idx_agent_obs_sessions_updated_at")
+  @@index([roomName, status], map: "idx_agent_obs_sessions_room_status")
+  @@map("agent_observability_sessions")
+}
