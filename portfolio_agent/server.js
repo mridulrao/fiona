@@ -5,6 +5,7 @@ import express from 'express';
 import { AccessToken } from 'livekit-server-sdk';
 import cors from 'cors';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -25,16 +26,35 @@ const OBSERVABILITY_INGEST_KEY = process.env.OBSERVABILITY_INGEST_KEY ?? null;
 const rawMaxSessionTurns = Number.parseInt(String(process.env.OBSERVABILITY_MAX_SESSION_TURNS ?? '500'), 10);
 const MAX_SESSION_TURNS =
   Number.isFinite(rawMaxSessionTurns) && rawMaxSessionTurns > 0 ? rawMaxSessionTurns : 500;
+const DASHBOARD_USERNAME = process.env.DASHBOARD_USERNAME ?? null;
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD ?? null;
+const rawDashboardSessionTtlMs = Number.parseInt(
+  String(process.env.DASHBOARD_SESSION_TTL_MS ?? `${8 * 60 * 60 * 1000}`),
+  10,
+);
+const DASHBOARD_SESSION_TTL_MS =
+  Number.isFinite(rawDashboardSessionTtlMs) && rawDashboardSessionTtlMs > 0
+    ? rawDashboardSessionTtlMs
+    : 8 * 60 * 60 * 1000;
+const DASHBOARD_AUTH_ENABLED = Boolean(DASHBOARD_USERNAME && DASHBOARD_PASSWORD);
 const prisma = DATABASE_URL
   ? new PrismaClient({
       adapter: new PrismaPg({ connectionString: DATABASE_URL }),
     })
   : null;
 
+const dashboardSessions = new Map();
+
 console.log('LIVEKIT_URL:', LIVEKIT_URL);
 console.log('LIVEKIT_API_KEY set?', !!API_KEY);
 console.log('LIVEKIT_API_SECRET set?', !!API_SECRET);
 console.log('DATABASE_URL set?', !!DATABASE_URL);
+console.log('DASHBOARD_AUTH_ENABLED:', DASHBOARD_AUTH_ENABLED);
+if ((DASHBOARD_USERNAME && !DASHBOARD_PASSWORD) || (!DASHBOARD_USERNAME && DASHBOARD_PASSWORD)) {
+  console.warn(
+    'Dashboard auth env is incomplete. Set both DASHBOARD_USERNAME and DASHBOARD_PASSWORD to enable dashboard auth.',
+  );
+}
 
 // Serve frontend directly from the same server.
 app.use(express.static(__dirname));
@@ -45,6 +65,40 @@ app.get('/', (_req, res) => {
 
 app.get('/dashboard', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/dashboard/auth-status', (req, res) => {
+  res.json({
+    enabled: DASHBOARD_AUTH_ENABLED,
+    authenticated: hasValidDashboardSession(req),
+  });
+});
+
+app.post('/dashboard/login', (req, res) => {
+  if (!DASHBOARD_AUTH_ENABLED) {
+    res.json({ status: 'ok', authEnabled: false });
+    return;
+  }
+
+  const username = req.body?.username ? String(req.body.username) : '';
+  const password = req.body?.password ? String(req.body.password) : '';
+  if (username !== DASHBOARD_USERNAME || password !== DASHBOARD_PASSWORD) {
+    res.status(401).json({ error: 'Invalid username or password' });
+    return;
+  }
+
+  pruneExpiredDashboardSessions();
+  const sessionToken = crypto.randomBytes(32).toString('hex');
+  dashboardSessions.set(sessionToken, Date.now() + DASHBOARD_SESSION_TTL_MS);
+  setDashboardSessionCookie(res, sessionToken);
+  res.json({ status: 'ok' });
+});
+
+app.post('/dashboard/logout', (req, res) => {
+  const token = getDashboardSessionToken(req);
+  if (token) dashboardSessions.delete(token);
+  clearDashboardSessionCookie(res);
+  res.json({ status: 'ok' });
 });
 
 function hasDatabaseConfig() {
@@ -144,6 +198,83 @@ function requireIngestKey(req, res, next) {
   }
 
   next();
+}
+
+function parseCookies(cookieHeader) {
+  if (!cookieHeader) return {};
+  return String(cookieHeader)
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((acc, pair) => {
+      const separatorIndex = pair.indexOf('=');
+      if (separatorIndex < 0) return acc;
+      const key = pair.slice(0, separatorIndex).trim();
+      const value = pair.slice(separatorIndex + 1).trim();
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+}
+
+function pruneExpiredDashboardSessions(nowMs = Date.now()) {
+  for (const [token, expiresAtMs] of dashboardSessions.entries()) {
+    if (!Number.isFinite(expiresAtMs) || expiresAtMs <= nowMs) {
+      dashboardSessions.delete(token);
+    }
+  }
+}
+
+function getDashboardSessionToken(req) {
+  const cookies = parseCookies(req.headers.cookie);
+  return cookies.dashboard_session ?? null;
+}
+
+function hasValidDashboardSession(req) {
+  if (!DASHBOARD_AUTH_ENABLED) return true;
+  pruneExpiredDashboardSessions();
+  const token = getDashboardSessionToken(req);
+  if (!token) return false;
+  const expiresAtMs = dashboardSessions.get(token);
+  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+    dashboardSessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
+function setDashboardSessionCookie(res, token) {
+  const maxAgeSeconds = Math.floor(DASHBOARD_SESSION_TTL_MS / 1000);
+  const secure = process.env.NODE_ENV === 'production';
+  const cookieParts = [
+    `dashboard_session=${encodeURIComponent(token)}`,
+    'Path=/',
+    `Max-Age=${maxAgeSeconds}`,
+    'HttpOnly',
+    'SameSite=Strict',
+  ];
+  if (secure) cookieParts.push('Secure');
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+}
+
+function clearDashboardSessionCookie(res) {
+  const secure = process.env.NODE_ENV === 'production';
+  const cookieParts = [
+    'dashboard_session=',
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    'SameSite=Strict',
+  ];
+  if (secure) cookieParts.push('Secure');
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+}
+
+function requireDashboardAuth(req, res, next) {
+  if (hasValidDashboardSession(req)) {
+    next();
+    return;
+  }
+  res.status(401).json({ error: 'Unauthorized' });
 }
 
 // ── Observability ingest + query (Prisma/Postgres-backed) ───────────────────
@@ -283,7 +414,7 @@ app.post('/observability/events', requireIngestKey, async (req, res) => {
   }
 });
 
-app.get('/observability/sessions', async (req, res) => {
+app.get('/observability/sessions', requireDashboardAuth, async (req, res) => {
   if (!hasDatabaseConfig()) {
     res.status(503).json({ error: 'Database observability is not configured' });
     return;
@@ -324,7 +455,7 @@ app.get('/observability/sessions', async (req, res) => {
   }
 });
 
-app.get('/observability/sessions/:sessionId', async (req, res) => {
+app.get('/observability/sessions/:sessionId', requireDashboardAuth, async (req, res) => {
   if (!hasDatabaseConfig()) {
     res.status(503).json({ error: 'Database observability is not configured' });
     return;
@@ -364,7 +495,7 @@ app.get('/observability/sessions/:sessionId', async (req, res) => {
   }
 });
 
-app.get('/observability/events', async (req, res) => {
+app.get('/observability/events', requireDashboardAuth, async (req, res) => {
   const sessionId = req.query.sessionId ? String(req.query.sessionId) : null;
   if (!sessionId) {
     res.status(400).json({ error: 'Use /observability/sessions for session list or pass sessionId' });
@@ -396,7 +527,7 @@ app.get('/observability/events', async (req, res) => {
   }
 });
 
-app.get('/observability/summary', async (req, res) => {
+app.get('/observability/summary', requireDashboardAuth, async (req, res) => {
   if (!hasDatabaseConfig()) {
     res.status(503).json({ error: 'Database observability is not configured' });
     return;

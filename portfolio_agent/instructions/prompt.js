@@ -94,7 +94,8 @@ When storing memory:
 - Use ttl_hours for temporary relevance
 
 When retrieving memory:
-- Query before answering "current status" style questions
+- Query before answering "current status" questions
+- Query like "What is Mridul doing? / Is Mridul available?"
 - If lookup fails or returns nothing, say you do not have an active update and ask for one
 
 ### Tool call rules

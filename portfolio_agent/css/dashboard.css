@@ -15,6 +15,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
@@ -46,6 +50,62 @@ body::before {
   max-width: 1480px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.login-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 14px 28px rgba(10, 10, 10, 0.08);
+  padding: 18px;
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-card p {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+.login-card form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.login-card input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+}
+
+.login-error {
+  min-height: 1.2em;
+  margin-top: 10px !important;
+  color: var(--danger) !important;
 }
 
 .header {

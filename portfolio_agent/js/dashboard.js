@@ -1,3 +1,12 @@
+const loginShell = document.getElementById('login-shell');
+const dashboardShell = document.getElementById('dashboard-shell');
+const loginForm = document.getElementById('login-form');
+const loginUsername = document.getElementById('login-username');
+const loginPassword = document.getElementById('login-password');
+const loginSubmit = document.getElementById('login-submit');
+const loginError = document.getElementById('login-error');
+const logoutBtn = document.getElementById('logout-btn');
+
 const sessionsBody = document.getElementById('events-body');
 const turnsBody = document.getElementById('turns-body');
 const refreshBtn = document.getElementById('refresh-btn');
@@ -23,12 +32,19 @@ const statNodes = {
 
 let refreshTimer = null;
 let selectedSessionId = null;
+let authEnabled = true;
+let isAuthenticated = false;
 
-async function fetchJsonOrThrow(url) {
+async function fetchJsonOrThrow(url, options = {}) {
+  const hasJsonBody = options.body !== undefined && !options.headers?.['Content-Type'];
+  const headers = {
+    Accept: 'application/json',
+    ...(hasJsonBody ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.headers ?? {}),
+  };
   const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-    },
+    ...options,
+    headers,
   });
   const text = await res.text();
   let json = null;
@@ -39,7 +55,9 @@ async function fetchJsonOrThrow(url) {
     throw new Error(`Non-JSON response from ${url} (status ${res.status}): ${snippet}`);
   }
   if (!res.ok) {
-    throw new Error(json.error ?? `Request failed (${res.status}) for ${url}`);
+    const error = new Error(json.error ?? `Request failed (${res.status}) for ${url}`);
+    error.status = res.status;
+    throw error;
   }
   return json;
 }
@@ -56,6 +74,29 @@ function formatTime(ts) {
   const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleString();
+}
+
+function setAuthView(authenticated, errorMessage = '') {
+  isAuthenticated = authenticated;
+  loginShell.hidden = authenticated;
+  dashboardShell.hidden = !authenticated;
+  logoutBtn.hidden = !authenticated;
+  loginError.textContent = errorMessage;
+
+  if (!authenticated && refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+async function loadAuthStatus() {
+  const json = await fetchJsonOrThrow('/dashboard/auth-status');
+  authEnabled = Boolean(json.enabled);
+  if (!authEnabled) {
+    setAuthView(true);
+    return;
+  }
+  setAuthView(Boolean(json.authenticated));
 }
 
 function queryStringFromFilters() {
@@ -176,6 +217,7 @@ function renderSummary(summary) {
 }
 
 async function loadDashboard() {
+  if (authEnabled && !isAuthenticated) return;
   try {
     const query = queryStringFromFilters();
     const [sessionsJson, summaryJson] = await Promise.all([
@@ -186,6 +228,10 @@ async function loadDashboard() {
     renderSessions(sessionsJson.sessions);
     renderSummary(summaryJson);
   } catch (error) {
+    if (error.status === 401) {
+      setAuthView(false, 'Session expired. Please login again.');
+      return;
+    }
     sessionsBody.innerHTML = `<tr><td colspan="11">${escapeHtml(error.message || String(error))}</td></tr>`;
     turnsBody.innerHTML = '<tr><td colspan="6">No turns</td></tr>';
   }
@@ -193,7 +239,7 @@ async function loadDashboard() {
 
 function updateAutoRefresh() {
   if (refreshTimer) clearInterval(refreshTimer);
-  if (autoRefreshInput.checked) {
+  if (autoRefreshInput.checked && (!authEnabled || isAuthenticated)) {
     refreshTimer = setInterval(loadDashboard, 5000);
   }
 }
@@ -201,6 +247,52 @@ function updateAutoRefresh() {
 refreshBtn.addEventListener('click', loadDashboard);
 applyFiltersBtn.addEventListener('click', loadDashboard);
 autoRefreshInput.addEventListener('change', updateAutoRefresh);
+logoutBtn.addEventListener('click', async () => {
+  try {
+    await fetchJsonOrThrow('/dashboard/logout', { method: 'POST' });
+  } catch {
+    // Ignore logout API failures and force logout view client-side.
+  }
+  setAuthView(false);
+});
 
-updateAutoRefresh();
-loadDashboard();
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  loginError.textContent = '';
+  loginSubmit.disabled = true;
+
+  try {
+    await fetchJsonOrThrow('/dashboard/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: loginUsername.value,
+        password: loginPassword.value,
+      }),
+    });
+    loginPassword.value = '';
+    setAuthView(true);
+    updateAutoRefresh();
+    loadDashboard();
+  } catch (error) {
+    const msg = error.status === 401 ? 'Invalid username or password.' : (error.message || String(error));
+    loginError.textContent = msg;
+  } finally {
+    loginSubmit.disabled = false;
+  }
+});
+
+async function initDashboard() {
+  try {
+    await loadAuthStatus();
+    updateAutoRefresh();
+    if (!authEnabled || isAuthenticated) {
+      loadDashboard();
+      return;
+    }
+    loginUsername.focus();
+  } catch (error) {
+    setAuthView(false, error.message || 'Failed to initialize authentication');
+  }
+}
+
+initDashboard();

@@ -201,6 +201,10 @@ export default defineAgent({
           // Keep a short lower bound for responsiveness; turn detector can extend to max when continuation is likely.
           minEndpointingDelay: minEndpointingDelayMs,
           maxEndpointingDelay: maxEndpointingDelayMs,
+          discardAudioIfUninterruptible: false,
+          allowInterruptions: true,
+          minInterruptionDuration: 120,
+          minInterruptionWords: 0
         },
       });  
 
