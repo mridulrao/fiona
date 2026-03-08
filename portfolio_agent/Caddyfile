@@ -1,5 +1,8 @@
-{$DOMAIN} {
-  tls {$ACME_EMAIL}
+{
+  email {$ACME_EMAIL}
+}
+
+{$DOMAIN:localhost} {
   encode zstd gzip
   reverse_proxy localhost:3001
 }

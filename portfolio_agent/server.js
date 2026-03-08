@@ -7,8 +7,9 @@ import cors from 'cors';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { PrismaClient } from '@prisma/client';
+import prismaPkg from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+const { PrismaClient } = prismaPkg;
 
 const app = express();
 app.use(cors());
