@@ -15,6 +15,8 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+RUN pnpm run prisma:generate
+
 EXPOSE 3001
 
 CMD ["pnpm", "run", "server"]
