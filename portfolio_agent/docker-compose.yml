@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: pnpm run server
+    command: sh -c "pnpm run prisma:generate && pnpm run server"
     network_mode: host
     env_file:
       - .env.local
@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: sh -c "pnpm run download-files && pnpm run dev"
+    command: sh -c "pnpm run prisma:generate && pnpm run download-files && pnpm run dev"
     network_mode: host
     env_file:
       - .env.local
