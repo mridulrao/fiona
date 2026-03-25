@@ -1,0 +1,35 @@
+[project]
+name = "onprem-agent"
+version = "0.1.0"
+description = "On-prem voice agent built with LiveKit plugins and custom LLM/TTS adapters."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp>=3.9",
+    "livekit",
+    "livekit-agents",
+    "livekit-plugins-deepgram",
+    "livekit-plugins-elevenlabs",
+    "livekit-plugins-noise-cancellation",
+    "livekit-plugins-openai",
+    "livekit-plugins-silero",
+    "openai>=1.0.0",
+    "opuslib>=3.0.1",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = [
+    "base_agent",
+    "custom_llm",
+    "custom_tts",
+    "custom_tts_lux",
+    "function_tools",
+    "main",
+    "primary_agent",
+    "primary_agent_instructions",
+]

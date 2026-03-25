@@ -1,6 +1,7 @@
 from __future__ import annotations  
 import asyncio  
 import logging  
+import os
 from dataclasses import dataclass  
 from dotenv import load_dotenv  
 from livekit import rtc  
@@ -18,7 +19,7 @@ from base_agent import BaseAgentEnglish
 from livekit.plugins import elevenlabs
 from livekit.plugins import noise_cancellation
 #from custom_llm import GatewayLLM
-from custom_tts import CustomWebSocketTTS
+from custom_tts_lux import LuxWebSocketTTS
 from livekit.agents.voice.room_io import RoomInputOptions, RoomOutputOptions
 
 
@@ -44,12 +45,17 @@ class EnglishAgent(BaseAgentEnglish):
             instructions=instructions,  
             stt=deepgram.STT(),  
             llm=openai.LLM(),  
-            tts=CustomWebSocketTTS(
-              base_url="https://fpt8xigoz8g6xf-8004.proxy.runpod.net",
-              language="en",
-          ),
+            tts=LuxWebSocketTTS(
+                base_url=os.getenv("LUX_TTS_BASE_URL", "ws://127.0.0.1:8765"),
+                prompt_audio=os.getenv("LUX_PROMPT_AUDIO", "shahrukh_voice.mp3"),
+                num_steps=int(os.getenv("LUX_TTS_NUM_STEPS", "2")),
+            ),
             vad=silero.VAD.load(), 
         )  
+
+    async def on_enter(self):  
+        """Called when agent is activated."""  
+        await self.session.say("Hello, tell me, who has the pleasure of calling?") 
   
   
 async def entrypoint(ctx: JobContext):  
@@ -80,4 +86,3 @@ if __name__ == "__main__":
     cli.run_app(WorkerOptions(  
         entrypoint_fnc=entrypoint,
     ))
-
