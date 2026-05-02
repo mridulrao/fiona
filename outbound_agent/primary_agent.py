@@ -44,7 +44,7 @@ class OutboundCaller(Agent):
         super().__init__(
             instructions=instructions,
             stt=deepgram.STT(),
-            llm=openai.LLM(model="openai/gpt-4.1"),
+            llm=openai.LLM(),
             tts=elevenlabs.TTS(
               voice_id="Xb7hH8MSUJpSbSDYk0k2",
               model="eleven_multilingual_v2",

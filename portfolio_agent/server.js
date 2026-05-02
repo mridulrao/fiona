@@ -68,6 +68,14 @@ app.get('/dashboard', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
+app.get('/pagesprite/privacypolicy', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'pagesprite', 'privacypolicy', 'index.html'));
+});
+
+app.get('/pagesprite/privacypolicy/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'pagesprite', 'privacypolicy', 'index.html'));
+});
+
 app.get('/dashboard/auth-status', (req, res) => {
   res.json({
     enabled: DASHBOARD_AUTH_ENABLED,

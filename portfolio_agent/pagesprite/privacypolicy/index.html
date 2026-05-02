@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PageSprite Privacy Policy</title>
+  <meta name="description" content="Privacy Policy for the PageSprite browser extension.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f3f5;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-soft: rgba(255, 255, 255, 0.72);
+      --line: rgba(20, 20, 20, 0.14);
+      --line-strong: rgba(20, 20, 20, 0.24);
+      --text: #1b1b1e;
+      --muted: #6d7079;
+      --accent: #232428;
+      --accent-soft: rgba(35, 36, 40, 0.08);
+      --shadow: 0 14px 34px rgba(10, 10, 10, 0.08);
+      --max-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 14%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 42%),
+        radial-gradient(circle at 86% 8%, rgba(210,214,221,0.55) 0%, rgba(210,214,221,0) 40%),
+        radial-gradient(circle at 72% 78%, rgba(220,222,227,0.5) 0%, rgba(220,222,227,0) 45%),
+        var(--bg);
+      line-height: 1.7;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        120deg,
+        transparent,
+        transparent 10px,
+        rgba(15,15,15,0.03) 10px,
+        rgba(15,15,15,0.03) 11px
+      );
+      opacity: 0.35;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.3;
+      animation: grain 0.8s steps(1) infinite;
+    }
+
+    @keyframes grain {
+      0%,100% { transform: translate(0,0); }
+      10% { transform: translate(-2%,-3%); }
+      20% { transform: translate(3%,1%); }
+      30% { transform: translate(-1%,4%); }
+      40% { transform: translate(2%,-2%); }
+      50% { transform: translate(-3%,3%); }
+      60% { transform: translate(1%,-4%); }
+      70% { transform: translate(-2%,2%); }
+      80% { transform: translate(4%,-1%); }
+      90% { transform: translate(-1%,-2%); }
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--text);
+    }
+
+    .shell {
+      width: min(var(--max-width), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-top: 12px;
+      padding: clamp(28px, 5vw, 56px);
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.5), rgba(255,255,255,0) 36%),
+        var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(3px);
+      clip-path: polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 10px,
+        rgba(20,20,20,0.016) 10px,
+        rgba(20,20,20,0.016) 11px
+      );
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 75%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 18px 0 12px;
+      max-width: 12ch;
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(2.5rem, 7vw, 5rem);
+      line-height: 0.98;
+      letter-spacing: 0.08em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-copy {
+      max-width: 700px;
+      color: var(--muted);
+      font-size: clamp(0.9rem, 1.4vw, 1rem);
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .meta-chip {
+      padding: 12px 14px;
+      min-width: 180px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.45);
+      position: relative;
+      z-index: 1;
+    }
+
+    .meta-chip span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .meta-chip strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .content-card,
+    .summary {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(3px);
+      box-shadow: var(--shadow);
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar::before,
+    .content-card::before,
+    .summary::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 10px,
+        rgba(20,20,20,0.016) 10px,
+        rgba(20,20,20,0.016) 11px
+      );
+    }
+
+    .sidebar::after,
+    .content-card::after,
+    .summary::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 75%);
+      pointer-events: none;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      padding: 22px;
+    }
+
+    .sidebar h2,
+    .content-card h2,
+    .summary h2 {
+      margin: 0 0 14px;
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.94rem;
+      letter-spacing: 0.1em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .toc {
+      display: grid;
+      gap: 8px;
+    }
+
+    .toc a {
+      padding: 10px 12px;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .toc a:hover,
+    .toc a:focus-visible {
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.03);
+      border-color: var(--line);
+      transform: translateX(2px);
+    }
+
+    .summary {
+      margin-bottom: 24px;
+      padding: 24px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .summary-item {
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.45);
+      position: relative;
+      z-index: 1;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .content-card {
+      padding: clamp(24px, 4vw, 40px);
+    }
+
+    .policy-section + .policy-section {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    .policy-section h3 {
+      margin: 0 0 12px;
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      letter-spacing: 0.06em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .policy-section p,
+    .policy-section li {
+      color: var(--muted);
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .policy-section ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+    }
+
+    .policy-section li + li {
+      margin-top: 8px;
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.52);
+      color: var(--text);
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding: 20px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(var(--max-width), calc(100% - 20px));
+        padding-top: 18px;
+        padding-bottom: 36px;
+      }
+
+      .hero,
+      .summary,
+      .content-card,
+      .sidebar {
+        clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      }
+
+      .hero h1 {
+        max-width: none;
+      }
+
+      .hero-meta {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero" aria-labelledby="policy-title">
+      <div class="eyebrow">PageSprite Extension Policy</div>
+      <h1 id="policy-title">Privacy Policy</h1>
+      <p class="hero-copy">
+        This Privacy Policy explains what information PageSprite may access, how that information is used, when it may be shared with service providers, and the choices available to users.
+      </p>
+      <div class="hero-meta" aria-label="Policy metadata">
+        <div class="meta-chip">
+          <span>Effective date</span>
+          <strong>April 29, 2026</strong>
+        </div>
+        <div class="meta-chip">
+          <span>Product</span>
+          <strong>PageSprite browser extension</strong>
+        </div>
+        <div class="meta-chip">
+          <span>Core principle</span>
+          <strong>User-invoked, task-limited processing</strong>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Privacy policy table of contents">
+        <h2>Contents</h2>
+        <nav class="toc">
+          <a href="#scope">1. Scope</a>
+          <a href="#data-accessed">2. Information We Access</a>
+          <a href="#usage">3. How Information Is Used</a>
+          <a href="#sharing">4. Third-Party Processing</a>
+          <a href="#storage">5. Storage and Retention</a>
+          <a href="#controls">6. User Choice and Control</a>
+          <a href="#sensitive">7. Sensitive Information</a>
+          <a href="#security">8. Security</a>
+          <a href="#changes">9. Changes to This Policy</a>
+          <a href="#contact">10. Contact</a>
+        </nav>
+      </aside>
+
+      <div>
+        <section class="summary" aria-labelledby="summary-title">
+          <h2 id="summary-title">At a Glance</h2>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <strong>Only when you use it</strong>
+              <p>PageSprite is designed to operate when a user actively opens it, highlights text, asks a question, or records voice input.</p>
+            </div>
+            <div class="summary-item">
+              <strong>Limited local storage</strong>
+              <p>Settings and user-provided configuration may be stored in browser extension storage to support the extension's functionality.</p>
+            </div>
+            <div class="summary-item">
+              <strong>Service-provider processing</strong>
+              <p>Relevant page content or voice input may be sent to supported providers only when required to complete a requested feature.</p>
+            </div>
+          </div>
+        </section>
+
+        <article class="content-card">
+          <section class="policy-section" id="scope">
+            <div class="section-kicker">1. Scope</div>
+            <h3>What PageSprite does</h3>
+            <p>
+              PageSprite is a browser extension that helps users understand webpage content through conversational prompts, voice input, and inline explanations. It may allow users to ask questions about the active page, request explanations for selected text, or open a companion interface within the page.
+            </p>
+            <p>
+              PageSprite is intended to process information only in connection with the feature a user has chosen to invoke.
+            </p>
+          </section>
+
+          <section class="policy-section" id="data-accessed">
+            <div class="section-kicker">2. Data Access</div>
+            <h3>Information PageSprite may access</h3>
+            <p>Depending on how the extension is used, PageSprite may access the following categories of information:</p>
+            <ul>
+              <li>Visible webpage text and relevant DOM context from the active tab.</li>
+              <li>Text selected or highlighted by the user.</li>
+              <li>The current page title and URL.</li>
+              <li>Voice recordings captured when the user chooses to use voice input.</li>
+              <li>Extension settings and preferences, including companion-mode settings.</li>
+              <li>API keys or service credentials entered by the user for supported integrations.</li>
+            </ul>
+          </section>
+
+          <section class="policy-section" id="usage">
+            <div class="section-kicker">3. Use of Information</div>
+            <h3>How accessed information is used</h3>
+            <p>PageSprite uses accessed information solely to provide and support requested extension features, including:</p>
+            <ul>
+              <li>Generating explanations, summaries, or answers related to the active webpage.</li>
+              <li>Responding to questions about highlighted text.</li>
+              <li>Transcribing or processing user-provided voice input.</li>
+              <li>Displaying the companion interface and related extension controls.</li>
+              <li>Saving settings and user preferences necessary to operate the extension.</li>
+            </ul>
+            <div class="note">
+              PageSprite is designed so that page data is used for the requested task rather than for unrelated profiling, sale, or advertising purposes.
+            </div>
+          </section>
+
+          <section class="policy-section" id="sharing">
+            <div class="section-kicker">4. Third-Party Processing</div>
+            <h3>When information may be shared</h3>
+            <p>
+              To deliver its functionality, PageSprite may transmit relevant data to third-party service providers selected to support language or speech features. This may include webpage text, selected text, page title, page URL, or recorded voice input, but only when necessary to fulfill a user-requested action.
+            </p>
+            <p>Current providers may include:</p>
+            <ul>
+              <li><a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">OpenAI</a>, to generate responses and explanations.</li>
+              <li><a href="https://deepgram.com/privacy" target="_blank" rel="noreferrer">Deepgram</a>, to process or transcribe voice input.</li>
+            </ul>
+            <p>
+              PageSprite does not sell personal information and does not disclose user data to third parties except as necessary to provide extension features or as otherwise required by law.
+            </p>
+          </section>
+
+          <section class="policy-section" id="storage">
+            <div class="section-kicker">5. Retention</div>
+            <h3>Storage and retention of data</h3>
+            <p>
+              PageSprite may store limited information locally in browser extension storage, such as extension preferences, companion-mode settings, and user-provided API keys where applicable.
+            </p>
+            <p>
+              PageSprite is not intended to persist webpage content, highlighted text, or voice transcripts beyond what is needed to complete the active request unless a later version of the product explicitly introduces that functionality and updates this policy accordingly.
+            </p>
+          </section>
+
+          <section class="policy-section" id="controls">
+            <div class="section-kicker">6. User Controls</div>
+            <h3>Your choice and control</h3>
+            <p>Users control when PageSprite is activated. The extension is intended to operate only when a user takes a direct action, such as:</p>
+            <ul>
+              <li>Opening and interacting with the extension.</li>
+              <li>Asking a question about a page.</li>
+              <li>Highlighting text and requesting an inline explanation.</li>
+              <li>Choosing to record and submit voice input.</li>
+            </ul>
+            <p>
+              Users may stop using the extension at any time and may remove it through their browser's extension settings.
+            </p>
+          </section>
+
+          <section class="policy-section" id="sensitive">
+            <div class="section-kicker">7. Sensitive Content</div>
+            <h3>Use caution with sensitive information</h3>
+            <p>
+              Because PageSprite works on webpages selected by the user, the content processed through the extension may sometimes include sensitive personal, financial, medical, legal, or confidential information. Users should exercise caution before using PageSprite on pages containing highly sensitive material.
+            </p>
+            <p>
+              If a feature requires sending content to an external provider, users should proceed only if they are comfortable with that processing.
+            </p>
+          </section>
+
+          <section class="policy-section" id="security">
+            <div class="section-kicker">8. Security</div>
+            <h3>Security measures</h3>
+            <p>
+              PageSprite is intended to use HTTPS or equivalent secure transport when communicating with supported third-party APIs. However, no method of electronic transmission or storage is completely secure, and absolute security cannot be guaranteed.
+            </p>
+          </section>
+
+          <section class="policy-section" id="changes">
+            <div class="section-kicker">9. Policy Updates</div>
+            <h3>Changes to this Privacy Policy</h3>
+            <p>
+              This Privacy Policy may be updated from time to time to reflect product changes, legal requirements, or operational updates. Any revised version will be posted at the current policy URL with an updated effective date.
+            </p>
+          </section>
+
+          <section class="policy-section" id="contact">
+            <div class="section-kicker">10. Contact</div>
+            <h3>Questions about this policy</h3>
+            <p>
+              If you have questions about this Privacy Policy or PageSprite, please contact <a href="https://quantizedmind.tech" target="_blank" rel="noreferrer">quantizedmind.tech</a> or use the contact information published on this website.
+            </p>
+          </section>
+        </article>
+      </div>
+    </div>
+
+    <footer class="footer">
+      PageSprite Privacy Policy
+    </footer>
+  </main>
+</body>
+</html>
